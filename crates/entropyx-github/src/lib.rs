@@ -162,6 +162,19 @@ fn backoff_seconds(attempt: u32) -> u64 {
     base.min(MAX_RETRY_WAIT_SECS)
 }
 
+/// Classify a `ureq::Error` as a transient network failure that's
+/// worth retrying. Connection drops, hostname resolution failures,
+/// timeouts, and IO errors all qualify. Structural errors (bad URI,
+/// HTTP-level decode failures, body-size violations, TLS cert errors)
+/// do not — those won't get better on retry.
+fn is_transient_network_error(e: &ureq::Error) -> bool {
+    use ureq::Error::*;
+    matches!(
+        e,
+        Io(_) | Timeout(_) | HostNotFound | ConnectionFailed,
+    )
+}
+
 impl GithubClient for HttpClient {
     fn pr_for_commit(
         &self,
@@ -179,7 +192,8 @@ impl GithubClient for HttpClient {
         );
 
         // Retry loop: up to MAX_RETRIES attempts sharing a single
-        // budget across rate-limit waits and transient 5xx backoff.
+        // budget across rate-limit waits, transient 5xx backoff, and
+        // transient network errors (connection reset / DNS / timeout).
         let mut attempt = 0u32;
         let mut resp = loop {
             let mut req = self
@@ -190,7 +204,28 @@ impl GithubClient for HttpClient {
             if let Some(t) = &self.token {
                 req = req.header("Authorization", &format!("Bearer {t}"));
             }
-            let resp = req.call()?;
+            let resp = match req.call() {
+                Ok(r) => r,
+                Err(e) if is_transient_network_error(&e) => {
+                    if attempt >= MAX_RETRIES {
+                        return Err(format!(
+                            "github API: network error after {MAX_RETRIES} retries: {e}",
+                        )
+                        .into());
+                    }
+                    let wait = backoff_seconds(attempt);
+                    eprintln!(
+                        "entropyx-github: network error (attempt {}/{}); retrying in {}s: {e}",
+                        attempt + 1,
+                        MAX_RETRIES,
+                        wait,
+                    );
+                    std::thread::sleep(Duration::from_secs(wait));
+                    attempt += 1;
+                    continue;
+                }
+                Err(e) => return Err(Box::new(e)),
+            };
             let status = resp.status().as_u16();
 
             // Rate-limit: sleep per response headers, retry.
@@ -503,6 +538,26 @@ mod tests {
         // Caps at MAX_RETRY_WAIT_SECS regardless of attempt count.
         assert_eq!(backoff_seconds(20), MAX_RETRY_WAIT_SECS);
         assert_eq!(backoff_seconds(100), MAX_RETRY_WAIT_SECS);
+    }
+
+    #[test]
+    fn transient_network_error_classification() {
+        // Variants we DO retry on.
+        assert!(is_transient_network_error(&ureq::Error::Io(
+            std::io::Error::new(std::io::ErrorKind::ConnectionReset, "reset"),
+        )));
+        assert!(is_transient_network_error(&ureq::Error::HostNotFound));
+        assert!(is_transient_network_error(&ureq::Error::ConnectionFailed));
+
+        // Variants we do NOT retry on — structural / unrecoverable.
+        assert!(!is_transient_network_error(&ureq::Error::BadUri(
+            "not a uri".to_string()
+        )));
+        assert!(!is_transient_network_error(&ureq::Error::TooManyRedirects));
+        assert!(!is_transient_network_error(&ureq::Error::BodyExceedsLimit(
+            100
+        )));
+        assert!(!is_transient_network_error(&ureq::Error::StatusCode(404)));
     }
 
     #[test]
