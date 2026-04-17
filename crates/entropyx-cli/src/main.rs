@@ -175,7 +175,19 @@ fn scan(args: &[String]) -> ExitCode {
     // Summary.enrichments.pull_requests for PR context on every event.
     let mut per_file_times: BTreeMap<String, Vec<(i64, String)>> = BTreeMap::new();
     let mut per_file_authors: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    let mut per_commit_paths: Vec<Vec<String>> = Vec::with_capacity(metas.len());
+    // Canonical paths are interned via Arc<str> so a path that appears
+    // in thousands of commits (the common case in large repos) is
+    // stored as a single string with refcounted pointers into the
+    // per_commit_paths matrix. Each ref is 16 bytes vs ~24+len bytes
+    // for String. Issue #1, Tier 1 step 2.
+    //
+    // Arc<str> implements AsRef<str>, so downstream APIs
+    // (change_counts, CoChangeGraph::from_commit_paths) keep their
+    // generic signatures and work unchanged.
+    let mut per_commit_paths: Vec<Vec<std::sync::Arc<str>>> =
+        Vec::with_capacity(metas.len());
+    let mut path_intern: std::collections::HashMap<String, std::sync::Arc<str>> =
+        std::collections::HashMap::new();
     // (from_path, to_path, at_time, sha) captured during the walk,
     // resolved to FileIds + events once interning completes.
     let mut rename_raw: Vec<(String, String, i64, String)> = Vec::new();
@@ -281,26 +293,41 @@ fn scan(args: &[String]) -> ExitCode {
         // Deduplicated canonical path set for this commit. Used for
         // per_file_times/authors accumulation and as the co-change graph
         // edge set.
-        let mut canonical_paths: Vec<String> = changes
+        // Build the canonical path set for this commit, dedup, then
+        // intern each path through the refcounted table. The inner vec
+        // holds Arc<str> clones (16-byte pointer bumps), not String
+        // allocations. Sort happens on String before interning so the
+        // final Vec<Arc<str>> is also sorted (Arc<str>: Ord).
+        let mut canonical_strings: Vec<String> = changes
             .into_iter()
             .map(|c| lineage.canonical(&c.path))
             .collect();
-        canonical_paths.sort();
-        canonical_paths.dedup();
-        for path in &canonical_paths {
+        canonical_strings.sort();
+        canonical_strings.dedup();
+        let canonical_paths: Vec<std::sync::Arc<str>> = canonical_strings
+            .into_iter()
+            .map(|s| {
+                path_intern
+                    .entry(s.clone())
+                    .or_insert_with(|| std::sync::Arc::from(s.as_str()))
+                    .clone()
+            })
+            .collect();
+        for arc_path in &canonical_paths {
+            let path: &str = arc_path.as_ref();
             per_file_times
-                .entry(path.clone())
+                .entry(path.to_string())
                 .or_default()
                 .push((commit.committer.time, commit.sha.clone()));
             per_file_authors
-                .entry(path.clone())
+                .entry(path.to_string())
                 .or_default()
                 .push(commit.author.email.clone());
             // T_c stats: every touch counts in the denominator; cotouch
             // with a test-file in the same commit counts in the numerator.
             // Test files themselves are excluded from the numerator — we
             // give them 1.0 at row-build time.
-            let stats = tc_stats.entry(path.clone()).or_insert((0u64, 0u64));
+            let stats = tc_stats.entry(path.to_string()).or_insert((0u64, 0u64));
             stats.0 += 1;
             if commit_has_test && !is_test_path(path) {
                 stats.1 += 1;
