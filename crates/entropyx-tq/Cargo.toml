@@ -9,6 +9,4 @@ description = "tq1 — token-efficient summary protocol for entropyx (Summary, D
 [dependencies]
 entropyx-core = { path = "../entropyx-core" }
 serde = { workspace = true }
-
-[dev-dependencies]
 serde_json = { workspace = true }

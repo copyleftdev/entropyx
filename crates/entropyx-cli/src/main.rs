@@ -31,6 +31,7 @@ fn main() -> ExitCode {
         Some("scan") => scan(&args[1..]),
         Some("explain") => explain(&args[1..]),
         Some("calibrate") => calibrate_cmd(&args[1..]),
+        Some("schema") => schema_cmd(&args[1..]),
         Some("--version") => {
             println!("entropyx {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
@@ -1169,6 +1170,23 @@ fn calibrate_cmd(args: &[String]) -> ExitCode {
     write_json(&serde_json::to_value(&fitted).unwrap(), "calibrate")
 }
 
+fn schema_cmd(args: &[String]) -> ExitCode {
+    // `--format json` is the only supported form today — kept as a flag
+    // so future formats (YAML, a human-readable outline) can slot in
+    // without a breaking change to existing scripts.
+    let format = args
+        .iter()
+        .position(|a| a == "--format")
+        .and_then(|i| args.get(i + 1))
+        .map(String::as_str)
+        .unwrap_or("json");
+    if format != "json" {
+        eprintln!("schema: unsupported --format `{format}` (use json)");
+        return ExitCode::from(2);
+    }
+    write_json(&entropyx_tq::schema::schema_json(), "schema")
+}
+
 fn print_usage() {
     eprintln!(
         "entropyx — forensic instrument for codebase dynamics
@@ -1185,6 +1203,7 @@ Usage:
                                               (--github enriches commit: with PR)
   entropyx calibrate --summary <file> --labels <file>
                                               fit ScoreWeights via RFC-012 ridge
+  entropyx schema                             emit the tq1 Summary JSON Schema
   entropyx --version
   entropyx --help
 "

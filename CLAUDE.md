@@ -19,7 +19,7 @@ around.** No MCP magic, no skill pack — the CLI itself is the contract.
 | `entropyx-ast` | public-API delta backends: Rust (syn), Go/Python/TypeScript (tree-sitter) |
 | `entropyx-graph` | `CoChangeGraph` + Brandes' betweenness centrality |
 | `entropyx-github` | sparse REST enricher via ureq (v0.1 exposes `pr_for_commit`) |
-| `entropyx-cli` | four commands: `describe`, `scan`, `explain`, `calibrate` |
+| `entropyx-cli` | five commands: `describe`, `scan`, `explain`, `calibrate`, `schema` |
 | `entropyx-tq` | tq1 protocol envelope — `Summary`, `Dict`, `FileRow`, `Event`, `Schema`, `Enrichments`, `PullRequestRef`. Depends on entropyx-core for primitives. |
 
 Workspace-wide determinism invariant (RFC-001): all f64 reductions go
@@ -82,6 +82,18 @@ via gradient descent, emits a `ScoreWeights` JSON. Use the output with
 `scan --weights` for a calibrated re-scan.
 
 Pipeline: `scan → summary.json → calibrate → weights.json → scan --weights`.
+
+### `schema`
+
+```bash
+entropyx schema [--format json]
+```
+
+Emits the JSON Schema (draft 2020-12) describing the tq1 `Summary`
+envelope. `$id` is pinned to the current `CONTRACT_VERSION`, so two
+Summary files produced against different schema revisions are
+distinguishable by their schemas' `$id`. Useful for cross-language
+consumers validating tq1 payloads or generating typed bindings.
 
 ---
 

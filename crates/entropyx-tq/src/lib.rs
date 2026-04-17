@@ -155,3 +155,6 @@ pub enum Event {
         window_days: u32,
     },
 }
+
+pub mod schema;
+
