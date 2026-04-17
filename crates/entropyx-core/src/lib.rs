@@ -11,19 +11,15 @@
 
 pub mod describe;
 pub mod determinism;
-pub mod enrichment;
 pub mod handle;
 pub mod id;
 pub mod metric;
-pub mod summary;
 pub mod vertex;
 
 pub use describe::Describe;
-pub use enrichment::PullRequestRef;
 pub use handle::Handle;
 pub use id::{AuthorId, CommitId, FileId, LineageConfidence, Timestamp};
 pub use metric::{Metric, MetricComponents, ScoreWeights, SignalClass};
-pub use summary::{Dict, Enrichments, Event, FileRow, Schema, Summary};
 pub use vertex::VertexTable;
 
 /// tq1 — dictionary-encoded, handle-driven summary schema (RFC-009).

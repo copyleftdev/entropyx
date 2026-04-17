@@ -1,10 +1,8 @@
 //! RFC-009 invariants: Summary and Describe serialize losslessly through JSON
 //! and preserve the protocol-critical fields.
 
-use entropyx_core::{
-    Describe, Dict, Event, FileId, FileRow, Handle, Schema, Summary,
-    Timestamp, VertexTable,
-};
+use entropyx_core::{Describe, Handle, Timestamp, VertexTable};
+use entropyx_tq::{Dict, Event, FileRow, Schema, Summary};
 use std::collections::BTreeMap;
 
 #[test]

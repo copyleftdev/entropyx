@@ -1,15 +1,19 @@
-//! tq1 summary envelope (RFC-009).
+//! tq1 — token-efficient summary protocol for entropyx (RFC-009).
 //!
-//! Two-layer protocol: the summary is dense and dictionary-encoded; evidence
-//! is addressable by `Handle` and fetched on demand. AI consumers pay tokens
-//! only for the zones they choose to investigate.
+//! Two-layer protocol: the `Summary` is dense and dictionary-encoded;
+//! evidence is addressable by `Handle` and fetched on demand. AI
+//! consumers pay tokens only for the zones they choose to investigate.
+//!
+//! Lives in its own crate so the protocol envelope can evolve without
+//! cycling `entropyx-core` (which holds the underlying primitive
+//! types: `FileId`, `AuthorId`, `Timestamp`, `SignalClass`,
+//! `Handle`, `VertexTable`).
 
-use crate::SCHEMA;
-use crate::enrichment::PullRequestRef;
-use crate::handle::Handle;
-use crate::id::{AuthorId, FileId, Timestamp};
-use crate::metric::SignalClass;
-use crate::vertex::VertexTable;
+use entropyx_core::handle::Handle;
+use entropyx_core::id::{AuthorId, FileId, Timestamp};
+use entropyx_core::metric::SignalClass;
+use entropyx_core::vertex::VertexTable;
+use entropyx_core::{CONTRACT_VERSION, SCHEMA};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -35,6 +39,19 @@ pub struct Enrichments {
     pub pull_requests: BTreeMap<String, PullRequestRef>,
 }
 
+/// External-source metadata attached to commits in the tq1 Summary.
+/// Neutral type (no network deps) so the `Summary` sidecar can be read
+/// without any enricher crate as a dependency.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PullRequestRef {
+    pub number: u64,
+    pub title: String,
+    pub state: String,
+    pub merged: bool,
+    pub merged_at: Option<String>,
+    pub author: Option<String>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Schema {
     pub name: String,
@@ -45,7 +62,7 @@ impl Default for Schema {
     fn default() -> Self {
         Self {
             name: SCHEMA.to_string(),
-            version: crate::CONTRACT_VERSION.to_string(),
+            version: CONTRACT_VERSION.to_string(),
         }
     }
 }

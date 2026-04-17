@@ -16,9 +16,9 @@ use entropyx_core::metric::{
 };
 use entropyx_cli::cache::{DiskItemsCache, DiskPrCache};
 use entropyx_core::{
-    Dict, Enrichments, Event, FileRow, Handle, MetricComponents, Schema, ScoreWeights,
-    SignalClass, Summary, Timestamp, VertexTable,
+    Handle, MetricComponents, ScoreWeights, SignalClass, Timestamp, VertexTable,
 };
+use entropyx_tq::{Dict, Enrichments, Event, FileRow, Schema, Summary};
 use entropyx_graph::CoChangeGraph;
 use std::collections::BTreeMap;
 use std::io::Write;

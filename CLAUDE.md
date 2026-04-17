@@ -20,7 +20,7 @@ around.** No MCP magic, no skill pack — the CLI itself is the contract.
 | `entropyx-graph` | `CoChangeGraph` + Brandes' betweenness centrality |
 | `entropyx-github` | sparse REST enricher via ureq (v0.1 exposes `pr_for_commit`) |
 | `entropyx-cli` | four commands: `describe`, `scan`, `explain`, `calibrate` |
-| `entropyx-tq` | not yet extracted — Summary/Dict/FileRow live in `entropyx-core::summary` |
+| `entropyx-tq` | tq1 protocol envelope — `Summary`, `Dict`, `FileRow`, `Event`, `Schema`, `Enrichments`, `PullRequestRef`. Depends on entropyx-core for primitives. |
 
 Workspace-wide determinism invariant (RFC-001): all f64 reductions go
 through `metric::reduce_sum`; no wall-clock reads; interning is stable

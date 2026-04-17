@@ -20,6 +20,7 @@ entropyx-git = { path = "../entropyx-git" }
 entropyx-ast = { path = "../entropyx-ast" }
 entropyx-graph = { path = "../entropyx-graph" }
 entropyx-github = { path = "../entropyx-github" }
+entropyx-tq = { path = "../entropyx-tq" }
 serde_json = { workspace = true }
 
 [dev-dependencies]

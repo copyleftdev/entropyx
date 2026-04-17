@@ -271,6 +271,7 @@ dependencies = [
  "entropyx-git",
  "entropyx-github",
  "entropyx-graph",
+ "entropyx-tq",
  "serde_json",
  "tempfile",
 ]
@@ -298,7 +299,7 @@ dependencies = [
 name = "entropyx-github"
 version = "0.1.0"
 dependencies = [
- "entropyx-core",
+ "entropyx-tq",
  "serde",
  "serde_json",
  "ureq",
@@ -307,6 +308,15 @@ dependencies = [
 [[package]]
 name = "entropyx-graph"
 version = "0.1.0"
+
+[[package]]
+name = "entropyx-tq"
+version = "0.1.0"
+dependencies = [
+ "entropyx-core",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "equivalent"

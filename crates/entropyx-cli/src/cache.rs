@@ -15,7 +15,7 @@
 //! save if missing.
 
 use entropyx_ast::Language;
-use entropyx_core::PullRequestRef;
+use entropyx_tq::PullRequestRef;
 use std::collections::HashMap;
 use std::fs;
 use std::io;
