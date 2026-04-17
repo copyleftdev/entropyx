@@ -25,6 +25,7 @@ entropyx-graph = { path = "../entropyx-graph", version = "0.1.0" }
 entropyx-github = { path = "../entropyx-github", version = "0.1.0" }
 entropyx-tq = { path = "../entropyx-tq", version = "0.1.0" }
 serde_json = { workspace = true }
+rayon = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

@@ -228,6 +228,12 @@ fn scan(args: &[String]) -> ExitCode {
             }
         }
 
+        // Warm pass: collect every (blob_sha, Language) this commit needs
+        // and parse misses in parallel. The downstream `cached_items` calls
+        // then hit a warm cache 100% of the time, collapsing the inner
+        // loop's parse cost. See issue #1 (Tier 1).
+        warm_parse_cache(&repo, parent_sha, &commit.sha, &changes, &mut items_cache);
+
         // Second pass: aggregate under the canonical trajectory name.
         for ch in &changes {
             let canonical = lineage.canonical(&ch.path);
@@ -1025,6 +1031,105 @@ fn explain_range(repo: &entropyx_git::Repo, base: &str, head: &str) -> ExitCode 
 /// Cache is keyed on `(blob_sha, language)` and persisted to disk via
 /// `DiskItemsCache` — repeated scans of the same repo skip the parse
 /// entirely on hits.
+/// Pre-warm the items cache for every blob this commit's changes touch.
+///
+/// Reads blob contents sequentially on the main thread (cheap — gix pack
+/// files are memory-mapped) then parses cache misses in parallel via rayon.
+/// Blob reads are sequential because `gix::Repository` is `Send` but not
+/// `Sync`; tree-sitter parsing is thread-local per call, so the parse
+/// step parallelises cleanly.
+///
+/// Determinism is preserved because the items cache is keyed by
+/// `(blob_sha, Language)` — insertion order is irrelevant to final state.
+/// Issue #1, Tier 1.
+fn warm_parse_cache(
+    repo: &entropyx_git::Repo,
+    parent_sha: Option<&str>,
+    commit_sha: &str,
+    changes: &[entropyx_git::FileChange],
+    cache: &mut DiskItemsCache,
+) {
+    use rayon::prelude::*;
+    use std::collections::HashSet;
+
+    // Dedup within this commit so the same blob isn't read/parsed twice
+    // (can happen with rename + copy pointing at identical content).
+    // HashSet not BTreeSet because Language derives Hash but not Ord —
+    // order doesn't matter here, just presence.
+    let mut seen: HashSet<(String, entropyx_ast::Language)> = HashSet::new();
+    let mut to_parse: Vec<(String, entropyx_ast::Language, String)> = Vec::new();
+
+    for ch in changes {
+        let Some(lang) = entropyx_ast::language_from_path(&ch.path) else {
+            continue;
+        };
+
+        // Old side — same path selection the second-pass loop uses for
+        // the delta computation, so the warmed set is exactly the set
+        // cached_items will ask for.
+        let old_side = match &ch.kind {
+            entropyx_git::ChangeKind::Renamed { from, .. }
+            | entropyx_git::ChangeKind::Copied { from, .. } => Some(from.as_str()),
+            _ => Some(ch.path.as_str()),
+        };
+        if let (Some(ps), Some(path)) = (parent_sha, old_side)
+            && let Ok(Some(blob_sha)) = repo.blob_sha_at(ps, path)
+            && cache.get(&blob_sha, lang).is_none()
+            && seen.insert((blob_sha.clone(), lang))
+        {
+            let content = repo.blob_by_sha(&blob_sha).ok().flatten().unwrap_or_default();
+            to_parse.push((blob_sha, lang, content));
+        }
+
+        // New side
+        if !matches!(&ch.kind, entropyx_git::ChangeKind::Deleted)
+            && let Ok(Some(blob_sha)) = repo.blob_sha_at(commit_sha, &ch.path)
+            && cache.get(&blob_sha, lang).is_none()
+            && seen.insert((blob_sha.clone(), lang))
+        {
+            let content = repo.blob_by_sha(&blob_sha).ok().flatten().unwrap_or_default();
+            to_parse.push((blob_sha, lang, content));
+        }
+    }
+
+    if to_parse.is_empty() {
+        return;
+    }
+
+    // Size threshold — rayon thread-pool dispatch + ordered collect has
+    // measurable overhead (~10s of μs). On small repos like ripgrep, a
+    // single commit's change set is typically 1-3 parseable blobs. Below
+    // the threshold we stay sequential and skip the pool round-trip.
+    // Calibrated empirically against ripgrep (small) vs openclaw (large).
+    const PARALLEL_THRESHOLD: usize = 8;
+
+    let parsed: Vec<(String, entropyx_ast::Language, Vec<String>)> = if to_parse.len()
+        >= PARALLEL_THRESHOLD
+    {
+        // Parallel parse. Each closure is pure: `parse_public_items`
+        // creates a thread-local `Parser` per call, so no shared state.
+        to_parse
+            .into_par_iter()
+            .map(|(sha, lang, content)| {
+                let items = entropyx_ast::parse_public_items(&content, lang).unwrap_or_default();
+                (sha, lang, items)
+            })
+            .collect()
+    } else {
+        to_parse
+            .into_iter()
+            .map(|(sha, lang, content)| {
+                let items = entropyx_ast::parse_public_items(&content, lang).unwrap_or_default();
+                (sha, lang, items)
+            })
+            .collect()
+    };
+
+    for (sha, lang, items) in parsed {
+        cache.insert(sha, lang, items);
+    }
+}
+
 fn cached_items(
     repo: &entropyx_git::Repo,
     commit_sha: Option<&str>,
