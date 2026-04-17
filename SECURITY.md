@@ -33,7 +33,7 @@ The security surface is small but non-zero:
 ## Reporting
 
 **Please do not open a public GitHub issue for security-sensitive
-reports.** Instead email `dj@codetestcode.io` with:
+reports.** Instead email `don@codetestcode.io` with:
 
 1. A description of the issue.
 2. A reproduction: the smallest repository / input that triggers it,

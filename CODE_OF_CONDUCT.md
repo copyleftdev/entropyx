@@ -22,7 +22,7 @@ accuse.
 
 ## Enforcement
 
-The maintainer (DJ, `dj@codetestcode.io`) reserves the right to
+The maintainer (`copyleftdev`, `don@codetestcode.io`) reserves the right to
 close issues, block comments, or revert contributions that violate
 the spirit of the above. There's no formal committee. If you think
 a call was wrong, email the maintainer directly and say so.
