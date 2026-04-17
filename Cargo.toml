@@ -15,6 +15,13 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 license = "Apache-2.0 OR MIT"
+authors = ["DJ <dj@codetestcode.io>"]
+repository = "https://github.com/codetestcode/entropyx"
+homepage = "https://github.com/codetestcode/entropyx"
+documentation = "https://github.com/codetestcode/entropyx"
+readme = "README.md"
+keywords = ["git", "forensics", "metrics", "ast", "ai"]
+categories = ["command-line-utilities", "development-tools"]
 
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }

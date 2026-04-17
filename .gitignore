@@ -1,1 +1,25 @@
 /target
+
+# Rust / cargo
+**/*.rs.bk
+*.pdb
+Cargo.lock.bak
+
+# editor noise
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# local cache dirs entropyx may write when CACHE_DIR is unset
+.entropyx-cache/
+
+# local scan artifacts (devs often `scan > foo.json` during iteration)
+/*.summary.json
+/*.weights.json
+/scans/
+
+# environment overrides
+.env
+.env.local

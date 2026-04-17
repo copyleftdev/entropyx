@@ -1,0 +1,17 @@
+entropyx is built and maintained by:
+
+  DJ <dj@codetestcode.io>  — creator, design, architecture
+
+Design and implementation collaborator:
+
+  Claude (Anthropic) — pair-programming partner across the v0.1 build.
+                       entropyx is purpose-built as a CLI instrument for
+                       AI collaborators; Claude was the first user.
+
+Additional contributors (listed in commit-chronological order) will be
+appended here as contributions land. A commit's `Co-Authored-By` trailer
+or PR authorship is sufficient to earn a line.
+
+This file is an informational credit roll and is not authoritative for
+license purposes. See LICENSE-MIT and LICENSE-APACHE for the legal
+copyright notice.
