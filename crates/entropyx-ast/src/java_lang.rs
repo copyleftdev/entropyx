@@ -69,12 +69,11 @@ fn method_has_private_modifier(name_node: tree_sitter::Node<'_>, src: &[u8]) -> 
     };
     let mut walker = method.walk();
     for child in method.children(&mut walker) {
-        if child.kind() == "modifiers" {
-            if let Ok(text) = child.utf8_text(src) {
-                if text.split_whitespace().any(|w| w == "private") {
-                    return true;
-                }
-            }
+        if child.kind() == "modifiers"
+            && let Ok(text) = child.utf8_text(src)
+            && text.split_whitespace().any(|w| w == "private")
+        {
+            return true;
         }
     }
     false

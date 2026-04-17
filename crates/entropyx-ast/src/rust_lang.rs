@@ -52,10 +52,10 @@ fn collect(item: &Item, out: &mut Vec<String>) {
         Item::Impl(imp) => {
             let ty = type_name(&imp.self_ty);
             for item in &imp.items {
-                if let syn::ImplItem::Fn(m) = item {
-                    if is_public(&m.vis) {
-                        out.push(format!("impl:{}::{}", ty, fn_sig(&m.sig)));
-                    }
+                if let syn::ImplItem::Fn(m) = item
+                    && is_public(&m.vis)
+                {
+                    out.push(format!("impl:{}::{}", ty, fn_sig(&m.sig)));
                 }
             }
         }

@@ -61,12 +61,11 @@ fn walk_top(node: Node<'_>, src: &[u8], items: &mut Vec<String>) {
 }
 
 fn handle_class_or_module(node: Node<'_>, src: &[u8], items: &mut Vec<String>, kind: &str) {
-    if let Some(name_node) = node.child_by_field_name("name") {
-        if let Ok(name) = name_node.utf8_text(src) {
-            if !name.starts_with('_') {
-                items.push(format!("{kind}:{name}"));
-            }
-        }
+    if let Some(name_node) = node.child_by_field_name("name")
+        && let Ok(name) = name_node.utf8_text(src)
+        && !name.starts_with('_')
+    {
+        items.push(format!("{kind}:{name}"));
     }
     if let Some(body) = node.child_by_field_name("body") {
         walk_body(body, src, items);
@@ -164,10 +163,10 @@ fn call_symbol_targets(node: Node<'_>, src: &[u8]) -> Vec<String> {
     let mut cursor = args.walk();
     let mut out = Vec::new();
     for child in args.children(&mut cursor) {
-        if child.kind() == "simple_symbol" {
-            if let Ok(text) = child.utf8_text(src) {
-                out.push(text.trim_start_matches(':').to_string());
-            }
+        if child.kind() == "simple_symbol"
+            && let Ok(text) = child.utf8_text(src)
+        {
+            out.push(text.trim_start_matches(':').to_string());
         }
     }
     out

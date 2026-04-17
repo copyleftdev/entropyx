@@ -627,19 +627,15 @@ fn scan(args: &[String]) -> ExitCode {
                 enrichments.pull_requests.insert(sha.clone(), pr);
             }
         }
-        if !no_cache {
-            if let Err(e) = pr_cache.save() {
-                eprintln!("entropyx scan: warning — could not save PR cache: {e}");
-            }
+        if !no_cache && let Err(e) = pr_cache.save() {
+            eprintln!("entropyx scan: warning — could not save PR cache: {e}");
         }
     }
 
     // Persist the items cache unless --no-cache disabled it. New parses
     // accumulated this run become available to the next.
-    if !no_cache {
-        if let Err(e) = items_cache.save() {
-            eprintln!("entropyx scan: warning — could not save items cache: {e}");
-        }
+    if !no_cache && let Err(e) = items_cache.save() {
+        eprintln!("entropyx scan: warning — could not save items cache: {e}");
     }
 
     let summary = Summary {

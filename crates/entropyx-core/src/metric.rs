@@ -435,10 +435,10 @@ pub fn is_incident_subject(subject: &str) -> bool {
     // conventional-commits separator. This rejects `fixup` (autosquash),
     // `revertable` (adjective), `hotfixed` (past tense), etc.
     for prefix in ["fix", "hotfix", "revert"] {
-        if let Some(rest) = s.strip_prefix(prefix) {
-            if matches!(rest.chars().next(), Some(':' | ' ' | '(' | '!')) {
-                return true;
-            }
+        if let Some(rest) = s.strip_prefix(prefix)
+            && matches!(rest.chars().next(), Some(':' | ' ' | '(' | '!'))
+        {
+            return true;
         }
     }
     false

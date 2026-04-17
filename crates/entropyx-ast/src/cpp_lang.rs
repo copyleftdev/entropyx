@@ -64,10 +64,10 @@ fn walk_public(node: Node<'_>, src: &[u8], items: &mut Vec<String>) {
             }
         }
         "namespace_definition" => {
-            if let Some(name_node) = node.child_by_field_name("name") {
-                if let Ok(name) = name_node.utf8_text(src) {
-                    items.push(format!("namespace:{name}"));
-                }
+            if let Some(name_node) = node.child_by_field_name("name")
+                && let Ok(name) = name_node.utf8_text(src)
+            {
+                items.push(format!("namespace:{name}"));
             }
             if let Some(body) = node.child_by_field_name("body") {
                 let mut cursor = body.walk();
@@ -113,17 +113,13 @@ fn handle_record(
                 }
             }
             "function_definition" => {
-                if section_public {
-                    if let Some(name) = function_definition_name(child, src) {
-                        items.push(format!("fn:{name}"));
-                    }
+                if section_public && let Some(name) = function_definition_name(child, src) {
+                    items.push(format!("fn:{name}"));
                 }
             }
             "field_declaration" => {
-                if section_public {
-                    if let Some(name) = field_function_name(child, src) {
-                        items.push(format!("fn:{name}"));
-                    }
+                if section_public && let Some(name) = field_function_name(child, src) {
+                    items.push(format!("fn:{name}"));
                 }
             }
             "class_specifier" | "struct_specifier" | "union_specifier" | "enum_specifier" => {
