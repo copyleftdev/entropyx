@@ -76,9 +76,11 @@ fn describe(args: &[String]) -> ExitCode {
 fn scan(args: &[String]) -> ExitCode {
     // Flags: `--weights <path>` (calibrated weights), `--github
     // [owner/name]` (enrich with PR metadata; bare form auto-detects
-    // slug from origin remote).
+    // slug from origin remote), `--no-cache` (disable disk caches for
+    // this run — every blob is reparsed, every PR re-queried).
     let mut weights_path: Option<String> = None;
     let mut github: Option<Option<String>> = None;
+    let mut no_cache = false;
     let mut positional: Vec<&String> = Vec::new();
     let mut i = 0;
     while i < args.len() {
@@ -108,6 +110,10 @@ fn scan(args: &[String]) -> ExitCode {
                     github = Some(None);
                     i += 1;
                 }
+            }
+            "--no-cache" => {
+                no_cache = true;
+                i += 1;
             }
             _ => {
                 positional.push(a);
@@ -190,16 +196,16 @@ fn scan(args: &[String]) -> ExitCode {
     // Per-file (commits_touching, commits_with_test_cotouch) counts.
     // T_c = cotouch / touching for non-test files; 1.0 for test files.
     let mut tc_stats: BTreeMap<String, (u64, u64)> = BTreeMap::new();
-    // Blob-SHA-keyed cache of parsed public-API items, persisted to
-    // disk between runs. Long histories revisit identical blobs often
-    // (a file's blob at commit C is both the new-side of C's diff and
-    // the old-side of C's child's diff); on second-and-subsequent runs
-    // the cache absorbs nearly all parse cost.
-    //
-    // The cache loads from $XDG_CACHE_HOME/entropyx/items.json (or
-    // ~/.cache/entropyx/items.json), and saves at the end of scan.
-    // Override location via $ENTROPYX_CACHE_DIR.
-    let mut items_cache = DiskItemsCache::load_default();
+    // Blob-SHA-keyed cache of parsed public-API items. With caching
+    // enabled (the default), loads from $XDG_CACHE_HOME/entropyx/
+    // items.json and saves at scan end — second runs absorb nearly all
+    // parse cost. `--no-cache` skips both load and save (useful when
+    // debugging classifier output or after upstream changes).
+    let mut items_cache = if no_cache {
+        DiskItemsCache::default()
+    } else {
+        DiskItemsCache::load_default()
+    };
 
     for commit in &metas {
         let changes = match repo.diff_from_parent(&commit.sha) {
@@ -588,7 +594,11 @@ fn scan(args: &[String]) -> ExitCode {
         };
         use entropyx_github::GithubClient;
         let client = entropyx_github::HttpClient::from_env();
-        let mut pr_cache = DiskPrCache::load_default();
+        let mut pr_cache = if no_cache {
+            DiskPrCache::default()
+        } else {
+            DiskPrCache::load_default()
+        };
         let mut seen = std::collections::BTreeSet::new();
         for ev in &events {
             // Every event variant carries a `sha` field (empty when the
@@ -625,15 +635,19 @@ fn scan(args: &[String]) -> ExitCode {
                 enrichments.pull_requests.insert(sha.clone(), pr);
             }
         }
-        if let Err(e) = pr_cache.save() {
-            eprintln!("entropyx scan: warning — could not save PR cache: {e}");
+        if !no_cache {
+            if let Err(e) = pr_cache.save() {
+                eprintln!("entropyx scan: warning — could not save PR cache: {e}");
+            }
         }
     }
 
-    // Persist the items cache regardless of github usage. New parses
+    // Persist the items cache unless --no-cache disabled it. New parses
     // accumulated this run become available to the next.
-    if let Err(e) = items_cache.save() {
-        eprintln!("entropyx scan: warning — could not save items cache: {e}");
+    if !no_cache {
+        if let Err(e) = items_cache.save() {
+            eprintln!("entropyx scan: warning — could not save items cache: {e}");
+        }
     }
 
     let summary = Summary {
@@ -1161,10 +1175,11 @@ fn print_usage() {
 
 Usage:
   entropyx describe [--format json]           self-describing protocol root
-  entropyx scan <path> [--weights <file>] [--github [owner/name]]
-                                              walk a repo, emit a tq1 Summary
-                                              (--github enriches aftershock
-                                              events with PR context)
+  entropyx scan <path> [--weights <file>] [--github [owner/name]] [--no-cache]
+                                              walk a repo, emit a tq1 Summary.
+                                              --github enriches events with PR
+                                              context. --no-cache bypasses the
+                                              disk cache for fresh parses.
   entropyx explain <repo-path> <handle | file-path> [--github owner/name]
                                               per-file / commit / range evidence
                                               (--github enriches commit: with PR)

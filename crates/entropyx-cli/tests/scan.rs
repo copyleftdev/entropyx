@@ -8,6 +8,14 @@ use std::path::Path;
 use std::process::Command;
 use tempfile::tempdir;
 
+/// Build a Command rooted at the test binary with ENTROPYX_CACHE_DIR
+/// pointing inside `td_path`, so each test gets isolated disk caches.
+fn cli_cmd(td_path: &Path) -> Command {
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_entropyx"));
+    cmd.env("ENTROPYX_CACHE_DIR", td_path);
+    cmd
+}
+
 fn run_git(cwd: &Path, args: &[&str]) {
     let status = Command::new("git")
         .args(args)
@@ -57,8 +65,7 @@ fn scan_emits_tq1_summary() {
     fs::write(root.join("b.rs"), "bb\ncc\n").unwrap();
     commit_as(root, "Alice", "alice@ex.com", 400, "touch b");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -172,8 +179,7 @@ fn scan_emits_rename_event() {
     fs::rename(root.join("old.rs"), root.join("new.rs")).unwrap();
     commit_as(root, "Alice", "alice@ex.com", 200, "rename");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -232,8 +238,7 @@ fn scan_emits_hotspot_on_recent_burst() {
         );
     }
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -277,8 +282,7 @@ fn scan_steady_cadence_emits_no_hotspot() {
         commit_as(root, "Author", "author@ex.com", *t, &format!("c{i}"));
     }
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -323,8 +327,7 @@ fn scan_semantic_drift_distinguishes_api_change_from_cosmetic() {
     .unwrap();
     commit_as(root, "B", "b@ex.com", 200, "expand a, comment b");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -404,8 +407,7 @@ fn scan_emits_incident_aftershock() {
         commit_as(root, "Author", "a@ex.com", t, subject);
     }
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -450,8 +452,7 @@ fn scan_no_incident_without_fix_subject() {
         commit_as(root, "Author", "a@ex.com", t, "chore: bump");
     }
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -499,8 +500,7 @@ fn scan_test_coevolution_discounts_well_tested_code() {
     .unwrap();
     commit_as(root, "A", "a@ex.com", 300, "extend + test");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -569,8 +569,7 @@ fn scan_computes_semantic_drift_for_go_files() {
     .unwrap();
     commit_as(root, "A", "a@ex.com", 200, "extend both");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -629,8 +628,7 @@ fn scan_computes_semantic_drift_for_python_and_typescript() {
     .unwrap();
     commit_as(root, "A", "a@ex.com", 200, "expand both");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -675,8 +673,7 @@ fn scan_lineage_collapses_renamed_file_history() {
     fs::write(root.join("core.rs"), "v1\nv2\nv3\n").unwrap();
     commit_as(root, "A", "a@ex.com", 400, "c4 modify");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -751,8 +748,7 @@ fn scan_bridge_file_surfaces_via_betweenness() {
     fs::write(root.join("c.rs"), "v1\n").unwrap();
     commit_as(root, "A", "a@ex.com", 200, "bridge + c");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -797,8 +793,7 @@ fn scan_ignores_unsupported_languages() {
     .unwrap();
     commit_as(root, "A", "a@ex.com", 200, "add bar");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -825,8 +820,7 @@ fn scan_emits_ownership_split_event() {
     fs::write(root.join("foo.rs"), "v3\n").unwrap();
     commit_as(root, "Bob", "bob@ex.com", 300, "bob joins");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -889,8 +883,7 @@ fn scan_no_split_for_single_author_file() {
         fs::write(root.join("solo.rs"), format!("v{i}\n")).unwrap();
         commit_as(root, "Alice", "alice@ex.com", *t, &format!("c{i}"));
     }
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -926,8 +919,7 @@ fn scan_incident_aftershock_event_carries_sha_field() {
         commit_as(root, "A", "a@ex.com", t, subject);
     }
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin).args(["scan"]).arg(root).output().unwrap();
+    let out = cli_cmd(td.path()).args(["scan"]).arg(root).output().unwrap();
     assert!(out.status.success());
     let summary: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     let aftershock = summary["events"]
@@ -956,8 +948,7 @@ fn scan_github_auto_detect_fails_when_no_remote() {
     fs::write(root.join("a.rs"), "fn x(){}").unwrap();
     commit_as(root, "A", "a@ex.com", 100, "init");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .arg("--github")
@@ -972,9 +963,34 @@ fn scan_github_auto_detect_fails_when_no_remote() {
 }
 
 #[test]
+fn scan_no_cache_flag_runs_successfully() {
+    // --no-cache disables both DiskItemsCache and DiskPrCache. Verify
+    // the resulting Summary is structurally valid.
+    let td = tempdir().expect("tempdir");
+    let root = td.path();
+    run_git(root, &["init", "--quiet"]);
+    fs::write(root.join("a.rs"), "pub fn foo(){}\n").unwrap();
+    commit_as(root, "A", "a@ex.com", 100, "init");
+
+    let out = cli_cmd(td.path())
+        .args(["scan"])
+        .arg(root)
+        .arg("--no-cache")
+        .output()
+        .expect("spawn entropyx");
+    assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
+    let summary: serde_json::Value =
+        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    assert!(summary["dict"]["files"].is_array());
+    assert!(summary["files"].is_array());
+    // Cache file must NOT exist after a --no-cache run.
+    assert!(!td.path().join("items.json").exists(), "no cache file written");
+}
+
+#[test]
 fn scan_on_nonexistent_path_fails_cleanly() {
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let td = tempdir().expect("tempdir");
+    let out = cli_cmd(td.path())
         .args(["scan", "/definitely/not/a/repo/x7f2"])
         .output()
         .expect("spawn entropyx");

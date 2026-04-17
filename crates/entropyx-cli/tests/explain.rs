@@ -6,6 +6,14 @@ use std::path::Path;
 use std::process::Command;
 use tempfile::tempdir;
 
+/// Build a Command rooted at the test binary with ENTROPYX_CACHE_DIR
+/// pointing inside `td_path`, so each test gets isolated disk caches.
+fn cli_cmd(td_path: &Path) -> Command {
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_entropyx"));
+    cmd.env("ENTROPYX_CACHE_DIR", td_path);
+    cmd
+}
+
 fn run_git(cwd: &Path, args: &[&str]) {
     let status = Command::new("git")
         .args(args)
@@ -53,8 +61,7 @@ fn explain_filters_to_single_file() {
     fs::write(root.join("b.rs"), "bb\ncc\n").unwrap();
     commit_as(root, "Alice", "alice@ex.com", 400, "touch b");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg("a.rs")
@@ -105,8 +112,7 @@ fn explain_unknown_path_yields_empty_evidence() {
     fs::write(root.join("a.rs"), "one\n").unwrap();
     commit_as(root, "Alice", "alice@ex.com", 100, "add a");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg("does/not/exist.rs")
@@ -136,10 +142,9 @@ fn explain_resolves_handle_key() {
     fs::write(root.join("target.rs"), "v1\nv2\n").unwrap();
     commit_as(root, "Bob", "bob@ex.com", 200, "touch target");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
 
     // Step 1: scan emits a Summary; grab the handle key.
-    let scan_out = Command::new(bin).args(["scan"]).arg(root).output().expect("scan");
+    let scan_out = cli_cmd(td.path()).args(["scan"]).arg(root).output().expect("scan");
     assert!(scan_out.status.success());
     let summary: serde_json::Value = serde_json::from_slice(&scan_out.stdout).unwrap();
     let handles = summary["handles"].as_object().unwrap();
@@ -148,7 +153,7 @@ fn explain_resolves_handle_key() {
     assert!(handle_key.starts_with("file:"));
 
     // Step 2: explain with the handle key.
-    let explain_by_handle = Command::new(bin)
+    let explain_by_handle = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg(&handle_key)
@@ -165,7 +170,7 @@ fn explain_resolves_handle_key() {
     assert_eq!(by_handle["commits_touched"], 2);
 
     // Step 3: explain with the raw path — should match exactly.
-    let explain_by_path = Command::new(bin)
+    let explain_by_path = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg("target.rs")
@@ -185,8 +190,7 @@ fn explain_unknown_handle_fails_cleanly() {
     fs::write(root.join("a.rs"), "x\n").unwrap();
     commit_as(root, "Alice", "alice@ex.com", 100, "add a");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg("file:deadbeefcafe")
@@ -224,8 +228,7 @@ fn explain_commit_handle_returns_meta_and_changes() {
     let sha = rev_parse_head(root);
     assert_eq!(sha.len(), 40);
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg(format!("commit:{sha}"))
@@ -265,8 +268,7 @@ fn explain_commit_unknown_sha_fails_cleanly() {
     fs::write(root.join("a.rs"), "x\n").unwrap();
     commit_as(root, "Alice", "alice@ex.com", 100, "add");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg("commit:0000000000000000000000000000000000000000")
@@ -299,8 +301,7 @@ fn explain_range_handle_excludes_base() {
     commit_as(root, "A", "a@ex.com", 300, "c3");
     let c3 = rev_parse_head(root);
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg(format!("range:{c1}..{c3}"))
@@ -348,8 +349,7 @@ fn explain_commit_without_github_flag_has_no_pr_field() {
     commit_as(root, "Alice", "alice@ex.com", 100, "init");
     let sha = rev_parse_head(root);
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg(format!("commit:{sha}"))
@@ -370,8 +370,7 @@ fn explain_rejects_malformed_github_slug() {
     commit_as(root, "Alice", "alice@ex.com", 100, "init");
     let sha = rev_parse_head(root);
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg(format!("commit:{sha}"))
@@ -395,8 +394,7 @@ fn explain_range_malformed_fails_cleanly() {
     fs::write(root.join("a.rs"), "x\n").unwrap();
     commit_as(root, "Alice", "alice@ex.com", 100, "add");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg("range:deadbeef") // missing ".."
@@ -426,10 +424,9 @@ fn explain_follows_renames() {
     fs::rename(root.join("a.rs"), root.join("c.rs")).unwrap();
     commit_as(root, "Alice", "alice@ex.com", 200, "rename a -> c");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
 
     // Ask about the old path — should see 2 touches (add + rename-away).
-    let out_old = Command::new(bin)
+    let out_old = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg("a.rs")
@@ -440,7 +437,7 @@ fn explain_follows_renames() {
     assert_eq!(r_old["commits_touched"], 2, "a.rs: add + rename-away");
 
     // Ask about the new path — should see 1 touch (rename-to).
-    let out_new = Command::new(bin)
+    let out_new = cli_cmd(td.path())
         .args(["explain"])
         .arg(root)
         .arg("c.rs")

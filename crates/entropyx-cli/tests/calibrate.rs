@@ -12,6 +12,14 @@ use std::path::Path;
 use std::process::Command;
 use tempfile::tempdir;
 
+/// Build a Command rooted at the test binary with ENTROPYX_CACHE_DIR
+/// pointing inside `td_path`, so each test gets isolated disk caches.
+fn cli_cmd(td_path: &Path) -> Command {
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_entropyx"));
+    cmd.env("ENTROPYX_CACHE_DIR", td_path);
+    cmd
+}
+
 fn run_git(cwd: &Path, args: &[&str]) {
     let status = Command::new("git")
         .args(args)
@@ -70,10 +78,9 @@ fn calibrate_command_produces_valid_scoreweights() {
     .unwrap();
     commit_as(root, "carol@ex.com", 400, "even more hot");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
 
     // Step 1: scan → summary.json
-    let scan_out = Command::new(bin)
+    let scan_out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .output()
@@ -100,7 +107,7 @@ fn calibrate_command_produces_valid_scoreweights() {
     .unwrap();
 
     // Step 3: calibrate.
-    let cal_out = Command::new(bin)
+    let cal_out = cli_cmd(td.path())
         .args(["calibrate"])
         .arg("--summary")
         .arg(&summary_path)
@@ -137,7 +144,7 @@ fn calibrate_command_produces_valid_scoreweights() {
     let weights_path = td.path().join("weights.json");
     fs::write(&weights_path, &cal_out.stdout).unwrap();
 
-    let scan2_out = Command::new(bin)
+    let scan2_out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .arg("--weights")
@@ -167,10 +174,9 @@ fn scan_weights_flag_changes_composite() {
     fs::write(root.join("f.rs"), "pub fn a() {}\npub fn b() {}\n").unwrap();
     commit_as(root, "a@ex.com", 200, "add b");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
 
     // Default scan.
-    let default_out = Command::new(bin).args(["scan"]).arg(root).output().unwrap();
+    let default_out = cli_cmd(td.path()).args(["scan"]).arg(root).output().unwrap();
     assert!(default_out.status.success());
     let default: serde_json::Value = serde_json::from_slice(&default_out.stdout).unwrap();
     let default_composite = default["files"][0]["values"][7].as_f64().unwrap();
@@ -190,7 +196,7 @@ fn scan_weights_flag_changes_composite() {
     let weights_path = td.path().join("w.json");
     fs::write(&weights_path, serde_json::to_string(&weights).unwrap()).unwrap();
 
-    let weighted_out = Command::new(bin)
+    let weighted_out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .arg("--weights")
@@ -221,8 +227,7 @@ fn scan_weights_rejects_malformed_json() {
     let bogus = td.path().join("bad.json");
     fs::write(&bogus, "{ not valid json").unwrap();
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let out = Command::new(bin)
+    let out = cli_cmd(td.path())
         .args(["scan"])
         .arg(root)
         .arg("--weights")
@@ -245,8 +250,7 @@ fn calibrate_empty_overlap_falls_back_to_defaults() {
     fs::write(root.join("foo.rs"), "pub fn a(){}").unwrap();
     commit_as(root, "a@ex.com", 100, "init");
 
-    let bin = env!("CARGO_BIN_EXE_entropyx");
-    let scan_out = Command::new(bin).args(["scan"]).arg(root).output().unwrap();
+    let scan_out = cli_cmd(td.path()).args(["scan"]).arg(root).output().unwrap();
     let summary_path = td.path().join("summary.json");
     fs::write(&summary_path, &scan_out.stdout).unwrap();
 
@@ -255,7 +259,7 @@ fn calibrate_empty_overlap_falls_back_to_defaults() {
     let labels_path = td.path().join("labels.json");
     fs::write(&labels_path, serde_json::to_string(&labels).unwrap()).unwrap();
 
-    let cal_out = Command::new(bin)
+    let cal_out = cli_cmd(td.path())
         .args(["calibrate"])
         .arg("--summary")
         .arg(&summary_path)
