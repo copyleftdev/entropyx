@@ -1,14 +1,22 @@
 //! JavaScript public-API extraction via tree-sitter.
 //!
-//! JavaScript's API surface is explicit ES-module exports. v0.1
-//! captures `export function`, `export class`, and
-//! `export const|let|var`. CommonJS (`module.exports = ...`,
-//! `exports.name = ...`) is not yet tracked — add a query clause when
-//! legacy codebases demand it.
+//! Captures both ES-module and CommonJS export patterns:
 //!
-//! The grammar is very close to TypeScript's (TS is a superset), so
-//! the query mirrors the TS one minus `interface_declaration` and
-//! `type_alias_declaration`, which don't exist in plain JS.
+//! ES modules:
+//!   - `export function name() {}`
+//!   - `export class Name {}`
+//!   - `export const|let|var name = ...`
+//!
+//! CommonJS (signatures emitted with a `cjs:` prefix to distinguish
+//! from ESM `fn:` / `class:` / `const:`):
+//!   - `module.exports = { foo, bar };` → `cjs:foo`, `cjs:bar`
+//!   - `module.exports = SomeIdent;` → `cjs:SomeIdent`
+//!   - `exports.foo = ...;` → `cjs:foo`
+//!   - `module.exports.bar = ...;` → `cjs:bar`
+//!
+//! Not yet captured: `module.exports = function namedFn() {}` (an
+//! anonymous-or-named function expression on the right-hand side
+//! is treated as an opaque value; the binding name isn't extracted).
 
 use std::sync::OnceLock;
 use tree_sitter::{Language, Parser, Query, QueryCursor, StreamingIterator};
@@ -24,6 +32,7 @@ fn query() -> &'static Query {
         Query::new(
             language(),
             r#"
+            ;; ES modules
             (export_statement
               (function_declaration name: (identifier) @fn))
             (export_statement
@@ -34,6 +43,50 @@ fn query() -> &'static Query {
             (export_statement
               (variable_declaration
                 (variable_declarator name: (identifier) @var)))
+
+            ;; CommonJS — module.exports = { foo, bar } or { foo: ..., bar: ... }
+            (assignment_expression
+              left: (member_expression
+                object: (identifier) @_module
+                property: (property_identifier) @_exports)
+              right: (object
+                (shorthand_property_identifier) @cjs)
+              (#eq? @_module "module")
+              (#eq? @_exports "exports"))
+            (assignment_expression
+              left: (member_expression
+                object: (identifier) @_module
+                property: (property_identifier) @_exports)
+              right: (object
+                (pair key: (property_identifier) @cjs))
+              (#eq? @_module "module")
+              (#eq? @_exports "exports"))
+
+            ;; CommonJS — module.exports = SomeIdent
+            (assignment_expression
+              left: (member_expression
+                object: (identifier) @_module
+                property: (property_identifier) @_exports)
+              right: (identifier) @cjs
+              (#eq? @_module "module")
+              (#eq? @_exports "exports"))
+
+            ;; CommonJS — exports.foo = ...
+            (assignment_expression
+              left: (member_expression
+                object: (identifier) @_exports_obj
+                property: (property_identifier) @cjs)
+              (#eq? @_exports_obj "exports"))
+
+            ;; CommonJS — module.exports.foo = ...
+            (assignment_expression
+              left: (member_expression
+                object: (member_expression
+                  object: (identifier) @_module
+                  property: (property_identifier) @_exports)
+                property: (property_identifier) @cjs)
+              (#eq? @_module "module")
+              (#eq? @_exports "exports"))
             "#,
         )
         .expect("static javascript query compiles")
@@ -50,6 +103,7 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
     let class_idx = q.capture_index_for_name("class")?;
     let const_idx = q.capture_index_for_name("const")?;
     let var_idx = q.capture_index_for_name("var")?;
+    let cjs_idx = q.capture_index_for_name("cjs")?;
 
     let mut cursor = QueryCursor::new();
     let mut items = Vec::new();
@@ -68,7 +122,13 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
                 "const"
             } else if capture.index == var_idx {
                 "var"
+            } else if capture.index == cjs_idx {
+                "cjs"
             } else {
+                // Predicate-helper captures (`@_module`, `@_exports`)
+                // are filtered out by tree-sitter when the `#eq?`
+                // doesn't match — but they still appear in successful
+                // matches. Skip anything not in our named-emit set.
                 continue;
             };
             items.push(format!("{kind}:{name}"));
@@ -133,17 +193,53 @@ class Hidden {}
     }
 
     #[test]
-    fn module_exports_commonjs_not_yet_tracked() {
-        // Document v0.1 limitation: CJS-style exports are not
-        // captured. When legacy codebases demand it, extend the query
-        // with a clause for `assignment_expression` targeting
-        // `module.exports` or `exports.foo`.
+    fn module_exports_object_literal_captures_each_key() {
         let a = "function hello() {}\nmodule.exports = { hello };\n";
         let b = "function hello() {}\nfunction world() {}\nmodule.exports = { hello, world };\n";
-        assert_eq!(
-            public_api_delta(a, b, Language::JavaScript),
-            0,
-            "CJS exports not yet tracked (v0.1 limitation)",
-        );
+        // a has cjs:hello; b adds cjs:world → delta=1.
+        assert_eq!(public_api_delta(a, b, Language::JavaScript), 1);
+        let items_b = parse(b).expect("parse");
+        assert!(items_b.contains(&"cjs:hello".to_string()));
+        assert!(items_b.contains(&"cjs:world".to_string()));
+    }
+
+    #[test]
+    fn module_exports_object_with_pair_keys_captured() {
+        // `module.exports = { foo: ..., bar: 42 }` — each key counts.
+        let src = "module.exports = { greet: () => {}, version: 'v1' };\n";
+        let items = parse(src).expect("parse");
+        assert!(items.contains(&"cjs:greet".to_string()));
+        assert!(items.contains(&"cjs:version".to_string()));
+    }
+
+    #[test]
+    fn module_exports_single_identifier_captured() {
+        let src = "function go() {}\nmodule.exports = go;\n";
+        let items = parse(src).expect("parse");
+        assert!(items.contains(&"cjs:go".to_string()));
+    }
+
+    #[test]
+    fn exports_dot_name_is_captured() {
+        let src = "exports.foo = function () {};\nexports.bar = 42;\n";
+        let items = parse(src).expect("parse");
+        assert!(items.contains(&"cjs:foo".to_string()));
+        assert!(items.contains(&"cjs:bar".to_string()));
+    }
+
+    #[test]
+    fn module_exports_dot_name_is_captured() {
+        let src = "module.exports.alpha = 1;\nmodule.exports.beta = 2;\n";
+        let items = parse(src).expect("parse");
+        assert!(items.contains(&"cjs:alpha".to_string()));
+        assert!(items.contains(&"cjs:beta".to_string()));
+    }
+
+    #[test]
+    fn mixed_es_and_cjs_exports_both_appear() {
+        let src = "export function esmFn() {}\nmodule.exports.cjsName = 1;\n";
+        let items = parse(src).expect("parse");
+        assert!(items.contains(&"fn:esmFn".to_string()));
+        assert!(items.contains(&"cjs:cjsName".to_string()));
     }
 }
