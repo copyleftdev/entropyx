@@ -341,22 +341,24 @@
       <span class="material-symbols-outlined">play_arrow</span>
       Quick start
     </p>
-    <h2>Three commands. No setup.</h2>
-    <p>Clone, build, point it at a real repo. That's the whole loop.</p>
+    <h2>One install. Three commands.</h2>
+    <p>Install from crates.io, point it at a real repo. That's the whole loop.</p>
 
-<pre class="code"><span class="c"># 1. build</span>
-git clone https://github.com/copyleftdev/entropyx.git
-cd entropyx
-cargo build <span class="p">--release</span>
+<pre class="code"><span class="c"># install from crates.io</span>
+cargo install entropyx-cli
 
-<span class="c"># 2. scan a repo → tq1 Summary JSON</span>
-./target/release/entropyx scan /path/to/repo &gt; summary.json
+<span class="c"># scan a repo → tq1 Summary JSON</span>
+entropyx scan /path/to/repo &gt; summary.json
 
-<span class="c"># 3. drill into a file by its blob-hash handle</span>
-./target/release/entropyx explain /path/to/repo <span class="s">"file:0bdce769874b"</span>
+<span class="c"># drill into a file by its blob-hash handle</span>
+entropyx explain /path/to/repo <span class="s">"file:0bdce769874b"</span>
 
-<span class="c"># bonus — emit the typed protocol schema for your LLM</span>
-./target/release/entropyx schema &gt; tq1-schema.json</pre>
+<span class="c"># emit the typed protocol schema for your LLM</span>
+entropyx schema &gt; tq1-schema.json</pre>
+
+    <p style="margin-top:8px; color:var(--md-on-surface-dim); font-size:0.875rem;">
+      Prefer source? <code>git clone</code> the repo and <code>cargo build --release</code>.
+    </p>
 
     <p style="margin-top:24px">
       Five commands total:

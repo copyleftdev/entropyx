@@ -2,6 +2,11 @@
 
 **A forensic instrument for codebases. A quantifiable way to tell the truth.**
 
+[![crates.io](https://img.shields.io/crates/v/entropyx-cli.svg?label=entropyx&color=%234DD0E1)](https://crates.io/crates/entropyx-cli)
+[![CI](https://github.com/copyleftdev/entropyx/actions/workflows/ci.yml/badge.svg)](https://github.com/copyleftdev/entropyx/actions/workflows/ci.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
+[![site](https://img.shields.io/badge/site-copyleftdev.github.io-%23333333?logo=github)](https://copyleftdev.github.io/entropyx/)
+
 ---
 
 ## Why this exists
@@ -190,16 +195,53 @@ This is what dogfooding *is*: the instrument keeps getting more honest because y
 
 ---
 
+## Install
+
+**From crates.io** (fastest — one command, no checkout):
+
+```bash
+cargo install entropyx-cli
+```
+
+That installs the `entropyx` binary into `~/.cargo/bin/`. Verify:
+
+```bash
+entropyx --version
+entropyx describe
+```
+
+**From source** (when you want to hack on it):
+
+```bash
+git clone https://github.com/copyleftdev/entropyx.git
+cd entropyx
+cargo build --release
+./target/release/entropyx --version
+```
+
 ## Run it
 
 ```bash
-cargo build --release
-./target/release/entropyx scan /path/to/repo > summary.json
-./target/release/entropyx explain /path/to/repo file:<blob-prefix>
-./target/release/entropyx schema > tq1-schema.json
+entropyx scan /path/to/repo > summary.json
+entropyx explain /path/to/repo file:<blob-prefix>
+entropyx schema > tq1-schema.json
 ```
 
 Five commands total: `describe`, `scan`, `explain`, `calibrate`, `schema`. The `CLAUDE.md` in this repo has the engineering detail.
+
+### Use as a library
+
+The seven crates are on crates.io individually so you can consume just the layer you need:
+
+| crate | what to add to `Cargo.toml` |
+|---|---|
+| [`entropyx-core`](https://crates.io/crates/entropyx-core) | deterministic primitives, scoring, classifier |
+| [`entropyx-tq`](https://crates.io/crates/entropyx-tq) | tq1 protocol envelope (`Summary`, `Event`, JSON Schema) |
+| [`entropyx-ast`](https://crates.io/crates/entropyx-ast) | multi-language public-API delta |
+| [`entropyx-git`](https://crates.io/crates/entropyx-git) | gitoxide walk / diff / blame / rename resolver |
+| [`entropyx-graph`](https://crates.io/crates/entropyx-graph) | co-change graph + Brandes' betweenness |
+| [`entropyx-github`](https://crates.io/crates/entropyx-github) | sparse GitHub REST enricher |
+| [`entropyx-cli`](https://crates.io/crates/entropyx-cli) | the binary + its library surface |
 
 ---
 

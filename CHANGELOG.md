@@ -10,6 +10,13 @@ change requires a major version bump.
 
 ## [Unreleased]
 
+### Added
+
+- All seven crates published to crates.io: `entropyx-core`,
+  `entropyx-tq`, `entropyx-ast`, `entropyx-git`, `entropyx-graph`,
+  `entropyx-github`, `entropyx-cli`. The primary install path is now
+  `cargo install entropyx-cli` — no checkout required.
+
 ### Changed
 
 - Licensing: moved from dual Apache-2.0 OR MIT to
@@ -17,6 +24,8 @@ change requires a major version bump.
   closes the SaaS loophole. Contributors to the v0.1 baseline did
   so under the previous license; the relicense applies from this
   commit forward. See `LICENSE` and `CONTRIBUTING.md`.
+- Internal path dependencies now carry a caret `version = "0.1.0"`
+  alongside the workspace path — required for publishing.
 
 ### Added
 
