@@ -46,14 +46,41 @@ fn query() -> &'static Query {
             (method_declaration
               (modifiers "public")
               name: (identifier) @method)
+            ;; Methods inside an interface body — implicitly public
+            ;; unless explicitly private (Java 9+). The `private`
+            ;; check happens in Rust because tree-sitter queries can't
+            ;; assert absence of a sub-token.
             (interface_declaration
               body: (interface_body
                 (method_declaration
-                  name: (identifier) @method)))
+                  name: (identifier) @iface_method)))
             "#,
         )
         .expect("static java query compiles")
     })
+}
+
+/// Walk up from a captured identifier to the surrounding
+/// `method_declaration`, then inspect its `modifiers` child for the
+/// `private` token. Returns true when the method is explicitly private.
+fn method_has_private_modifier(
+    name_node: tree_sitter::Node<'_>,
+    src: &[u8],
+) -> bool {
+    let Some(method) = name_node.parent() else {
+        return false;
+    };
+    let mut walker = method.walk();
+    for child in method.children(&mut walker) {
+        if child.kind() == "modifiers" {
+            if let Ok(text) = child.utf8_text(src) {
+                if text.split_whitespace().any(|w| w == "private") {
+                    return true;
+                }
+            }
+        }
+    }
+    false
 }
 
 pub fn parse(source: &str) -> Option<Vec<String>> {
@@ -67,6 +94,7 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
     let enum_idx = q.capture_index_for_name("enum")?;
     let record_idx = q.capture_index_for_name("record")?;
     let method_idx = q.capture_index_for_name("method")?;
+    let iface_method_idx = q.capture_index_for_name("iface_method")?;
 
     let mut cursor = QueryCursor::new();
     let mut items = Vec::new();
@@ -86,6 +114,13 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
             } else if capture.index == record_idx {
                 "record"
             } else if capture.index == method_idx {
+                "method"
+            } else if capture.index == iface_method_idx {
+                // Java 9+: interface methods can be explicitly `private`
+                // (helpers for default methods). Skip those.
+                if method_has_private_modifier(capture.node, src_bytes) {
+                    continue;
+                }
                 "method"
             } else {
                 continue;
@@ -177,9 +212,10 @@ public interface Greeter {
     }
 
     #[test]
-    fn private_methods_in_interfaces_are_still_excluded() {
-        // Java 9+ allows `private` methods inside interfaces (helpers
-        // for default methods). Those should NOT be captured.
+    fn private_methods_in_interfaces_are_excluded() {
+        // Java 9+: interface methods can be explicitly `private`
+        // (helpers for default methods). Those are NOT public API
+        // and must not be captured.
         let src = r#"
 public interface I {
     default void public_helper() { realWork(); }
@@ -187,19 +223,11 @@ public interface I {
 }
 "#;
         let items = parse(src).expect("parse");
-        // We can't filter by `private` modifier in v0.1 without
-        // adding a separate query that excludes them — note the
-        // current behavior to set expectations.
-        // For now: public_helper IS captured (it's `default`). realWork
-        // is also captured because our query matches all method_declaration
-        // children of interface_body regardless of modifier.
-        // This documents v0.1 imprecision; tighten when it bites.
         assert!(items.contains(&"method:public_helper".to_string()));
-        // Document the current (slightly wrong) behavior:
-        let captures_realwork = items.contains(&"method:realWork".to_string());
-        if captures_realwork {
-            // This is the v0.1 over-capture. Don't fail; just observe.
-        }
+        assert!(
+            !items.contains(&"method:realWork".to_string()),
+            "private interface method must not be captured",
+        );
     }
 
     #[test]
