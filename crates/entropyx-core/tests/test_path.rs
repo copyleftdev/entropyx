@@ -44,3 +44,64 @@ fn windows_style_separators_normalized() {
     assert!(is_test_path("crates\\foo\\tests\\bar.rs"));
     assert!(is_test_path("src\\foo_test.rs"));
 }
+
+#[test]
+fn go_underscore_test_suffix() {
+    assert!(is_test_path("internal/config/config_test.go"));
+    assert!(is_test_path("pkg/foo/bar_test.go"));
+    assert!(!is_test_path("pkg/foo/bar.go"));
+}
+
+#[test]
+fn js_and_ts_dot_test_and_spec_suffixes() {
+    for f in [
+        "src/foo.test.js", "src/foo.test.ts",
+        "src/Bar.test.tsx", "src/x.test.jsx",
+        "src/y.spec.ts", "src/z.spec.js",
+        "src/m.test.mjs", "src/c.test.cjs",
+    ] {
+        assert!(is_test_path(f), "{f} should be a test path");
+    }
+    assert!(!is_test_path("src/foo.js"));
+    assert!(!is_test_path("src/attest.js"));
+}
+
+#[test]
+fn python_conventions_prefix_and_suffix() {
+    assert!(is_test_path("tests/test_widget.py"));
+    assert!(is_test_path("project/test_module.py"));
+    assert!(is_test_path("project/widget_test.py"));
+    assert!(is_test_path("tests.py"));
+    assert!(!is_test_path("project/testify.py"));
+}
+
+#[test]
+fn ruby_spec_and_test_suffixes() {
+    assert!(is_test_path("spec/models/user_spec.rb"));
+    assert!(is_test_path("test/user_test.rb"));
+    assert!(is_test_path("app/user_spec.rb"));
+    assert!(!is_test_path("app/user.rb"));
+}
+
+#[test]
+fn java_test_classes() {
+    assert!(is_test_path("src/test/java/FooTest.java"));
+    assert!(is_test_path("src/WidgetTests.java"));
+    assert!(is_test_path("src/ServiceSpec.java"));
+    assert!(!is_test_path("src/Service.java"));
+}
+
+#[test]
+fn cpp_test_suffixes() {
+    assert!(is_test_path("src/widget_test.cc"));
+    assert!(is_test_path("src/widget_test.cpp"));
+    assert!(is_test_path("src/widget_tests.cxx"));
+    assert!(!is_test_path("src/widget.cpp"));
+}
+
+#[test]
+fn js_test_directory_conventions() {
+    assert!(is_test_path("__tests__/foo.js"));
+    assert!(is_test_path("src/__tests__/bar.ts"));
+    assert!(is_test_path("test/helper.js"));
+}

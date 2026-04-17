@@ -53,7 +53,7 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
             if !name
                 .chars()
                 .next()
-                .map_or(false, |c| c.is_ascii_uppercase())
+                .is_some_and(|c| c.is_ascii_uppercase())
             {
                 continue;
             }

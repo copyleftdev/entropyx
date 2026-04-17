@@ -365,15 +365,50 @@ pub fn detect_ownership_split<'a>(
 /// richer, revisit this.
 pub fn is_test_path(path: &str) -> bool {
     let normalized = path.replace('\\', "/");
-    if normalized.starts_with("tests/") || normalized.contains("/tests/") {
-        return true;
+    // Directory-level conventions across ecosystems:
+    //   Rust/Go/Java/generic: `tests/`
+    //   JS/TS/Python/Ruby:    `test/`, `__tests__/`, `spec/`
+    for dir in ["tests", "test", "__tests__", "spec"] {
+        let prefix = format!("{dir}/");
+        let mid = format!("/{prefix}");
+        if normalized.starts_with(&prefix) || normalized.contains(&mid) {
+            return true;
+        }
     }
     let fname = normalized.rsplit('/').next().unwrap_or("");
-    if fname == "tests.rs" {
+    // Single-name test modules (Rust: `tests.rs`; Python: `tests.py`).
+    if fname == "tests.rs" || fname == "tests.py" || fname == "test.py" {
         return true;
     }
-    let test_suffixes = ["_test.rs", "_tests.rs", "_spec.rs"];
-    test_suffixes.iter().any(|suf| fname.ends_with(suf))
+    // Filename-level conventions by ecosystem:
+    //   Rust:   `*_test.rs`, `*_tests.rs`, `*_spec.rs`
+    //   Go:     `*_test.go`
+    //   JS/TS:  `*.test.(js|jsx|ts|tsx|mjs|cjs)`, `*.spec.(...)`
+    //   Python: `test_*.py`, `*_test.py`
+    //   Ruby:   `*_spec.rb`, `*_test.rb`
+    //   Java:   `*Test.java`, `*Tests.java`, `*Spec.java`
+    //   C++:    `*_test.cc|cpp|cxx|hpp|h`, `*_tests.cc|cpp|...`
+    let suffixes = [
+        "_test.rs", "_tests.rs", "_spec.rs",
+        "_test.go",
+        ".test.js", ".test.jsx", ".test.ts", ".test.tsx",
+        ".test.mjs", ".test.cjs",
+        ".spec.js", ".spec.jsx", ".spec.ts", ".spec.tsx",
+        ".spec.mjs", ".spec.cjs",
+        "_test.py", "_tests.py",
+        "_spec.rb", "_test.rb",
+        "Test.java", "Tests.java", "Spec.java",
+        "_test.cc", "_test.cpp", "_test.cxx", "_test.hpp", "_test.h",
+        "_tests.cc", "_tests.cpp", "_tests.cxx",
+    ];
+    if suffixes.iter().any(|suf| fname.ends_with(suf)) {
+        return true;
+    }
+    // Python `test_*.py` prefix convention — prefix-based, not suffix.
+    if fname.starts_with("test_") && fname.ends_with(".py") {
+        return true;
+    }
+    false
 }
 
 /// True if a commit subject conventionally indicates an incident

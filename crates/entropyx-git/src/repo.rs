@@ -303,7 +303,7 @@ fn iter_diff(from_tree: &gix::Tree<'_>, to_tree: &gix::Tree<'_>) -> Result<Vec<F
                 let from = String::from_utf8_lossy(source_location).into_owned();
                 let similarity = diff
                     .map(|d| {
-                        let total = (d.removals + d.insertions) as u32;
+                        let total = d.removals + d.insertions;
                         if total == 0 {
                             100
                         } else {

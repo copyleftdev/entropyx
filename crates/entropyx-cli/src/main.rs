@@ -419,7 +419,7 @@ fn scan(args: &[String]) -> ExitCode {
         // is in active firefighting territory, regardless of what its
         // other dimensions look like.
         let in_aftershock = v_t > 0.3
-            && incident_times.get(path).map_or(false, |v| !v.is_empty());
+            && incident_times.get(path).is_some_and(|v| !v.is_empty());
         let signal_class = if in_aftershock {
             Some(SignalClass::IncidentAftershock)
         } else {
@@ -1167,7 +1167,7 @@ fn calibrate_cmd(args: &[String]) -> ExitCode {
     }
 
     let fitted = calibrate(&features, &label_vec, CalibrationConfig::default());
-    write_json(&serde_json::to_value(&fitted).unwrap(), "calibrate")
+    write_json(&serde_json::to_value(fitted).unwrap(), "calibrate")
 }
 
 fn schema_cmd(args: &[String]) -> ExitCode {
