@@ -10,7 +10,7 @@ readme.workspace = true
 description = "Local git collector for entropyx — DAG walk, diffs, blame, rename detection."
 
 [dependencies]
-entropyx-core = { path = "../entropyx-core" }
+entropyx-core = { path = "../entropyx-core", version = "0.1.0" }
 gix = { workspace = true }
 serde = { workspace = true }
 

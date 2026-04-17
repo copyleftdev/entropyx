@@ -18,12 +18,12 @@ name = "entropyx"
 path = "src/main.rs"
 
 [dependencies]
-entropyx-core = { path = "../entropyx-core" }
-entropyx-git = { path = "../entropyx-git" }
-entropyx-ast = { path = "../entropyx-ast" }
-entropyx-graph = { path = "../entropyx-graph" }
-entropyx-github = { path = "../entropyx-github" }
-entropyx-tq = { path = "../entropyx-tq" }
+entropyx-core = { path = "../entropyx-core", version = "0.1.0" }
+entropyx-git = { path = "../entropyx-git", version = "0.1.0" }
+entropyx-ast = { path = "../entropyx-ast", version = "0.1.0" }
+entropyx-graph = { path = "../entropyx-graph", version = "0.1.0" }
+entropyx-github = { path = "../entropyx-github", version = "0.1.0" }
+entropyx-tq = { path = "../entropyx-tq", version = "0.1.0" }
 serde_json = { workspace = true }
 
 [dev-dependencies]

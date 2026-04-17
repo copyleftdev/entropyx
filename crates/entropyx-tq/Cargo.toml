@@ -10,6 +10,6 @@ readme.workspace = true
 description = "tq1 — token-efficient summary protocol for entropyx (Summary, Dict, FileRow, Event, Enrichments, PullRequestRef)."
 
 [dependencies]
-entropyx-core = { path = "../entropyx-core" }
+entropyx-core = { path = "../entropyx-core", version = "0.1.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
