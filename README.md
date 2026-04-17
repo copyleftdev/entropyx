@@ -215,3 +215,25 @@ Five commands total: `describe`, `scan`, `explain`, `calibrate`, `schema`. The `
 ## The promise
 
 The next time a production system falls over, nobody in the room should have to guess at what changed. The answer is in the repository. The repository already knows. entropyx just reads it back.
+
+---
+
+## License
+
+entropyx is licensed under the **GNU Affero General Public License,
+version 3 or later (AGPL-3.0-or-later).** See `LICENSE` for the full
+text.
+
+Plain-English summary (not legal advice — the LICENSE file is
+authoritative):
+
+- You can use, modify, and redistribute entropyx freely.
+- If you modify it and distribute those modifications — or run them
+  behind a network service that users interact with — you must make
+  the modified source available to those users under the same license.
+- Copyright attribution must be preserved in derivatives.
+
+If AGPL is incompatible with how you want to use entropyx — for
+example, you're embedding it in a closed-source product and can't
+open the modifications — reach out to the maintainer. A separately-
+licensed commercial release is discussable.

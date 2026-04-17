@@ -1,6 +1,6 @@
 entropyx is built and maintained by:
 
-  DJ <dj@codetestcode.io>  — creator, design, architecture
+  DJ (@copyleftdev) <dj@codetestcode.io>  — creator, design, architecture
 
 Design and implementation collaborator:
 
@@ -13,5 +13,5 @@ appended here as contributions land. A commit's `Co-Authored-By` trailer
 or PR authorship is sufficient to earn a line.
 
 This file is an informational credit roll and is not authoritative for
-license purposes. See LICENSE-MIT and LICENSE-APACHE for the legal
-copyright notice.
+license purposes. See LICENSE for the legal copyright notice
+(AGPL-3.0-or-later).

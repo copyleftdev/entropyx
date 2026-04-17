@@ -10,6 +10,14 @@ change requires a major version bump.
 
 ## [Unreleased]
 
+### Changed
+
+- Licensing: moved from dual Apache-2.0 OR MIT to
+  **AGPL-3.0-or-later**. Matches the project's copyleft stance and
+  closes the SaaS loophole. Contributors to the v0.1 baseline did
+  so under the previous license; the relicense applies from this
+  commit forward. See `LICENSE` and `CONTRIBUTING.md`.
+
 ### Added
 
 - `entropyx schema` — emits the tq1 `Summary` JSON Schema (draft

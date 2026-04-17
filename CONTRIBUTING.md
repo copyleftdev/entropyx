@@ -6,10 +6,19 @@ both of us time.
 
 ## License
 
-entropyx is dual-licensed under **Apache-2.0 OR MIT**. By submitting a
-contribution you agree that your work will be licensed the same way, and
-that your commit's `Co-Authored-By:` (or PR authorship) is the record of
-your attribution.
+entropyx is licensed under the **GNU Affero General Public License
+version 3 or later (AGPL-3.0-or-later)**. By submitting a contribution
+you agree that your work will be licensed the same way, and that your
+commit's `Co-Authored-By:` (or PR authorship) is the record of your
+attribution.
+
+**Read this before contributing:** AGPL-3.0 is a strong copyleft
+license with a network clause. If you or your employer ship a service
+that lets users interact with a modified entropyx over a network, you
+must make the modified source available to those users. If that's
+incompatible with your situation, talk to the maintainer before
+opening a PR — a separately-licensed downstream version can be
+discussed.
 
 If you want explicit credit in `AUTHORS`, add yourself in your first PR.
 
