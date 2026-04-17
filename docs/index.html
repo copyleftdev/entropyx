@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>entropyx — A quantifiable way to tell the truth</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A forensic instrument for codebases. Measurements, not opinions. Local-first. AGPL-3.0.">
+  <meta property="og:title" content="entropyx">
+  <meta property="og:description" content="A forensic instrument for codebases. A quantifiable way to tell the truth.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://copyleftdev.github.io/entropyx/">
+  <meta name="theme-color" content="#0C0E10">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0" rel="stylesheet">
+  <link rel="stylesheet" href="./assets/styles.css">
+</head>
+<body>
+
+<!-- =========================== App bar =========================== -->
+<header class="app-bar">
+  <div class="app-bar-inner">
+    <a class="brand" href="#top"><span class="dot"></span> entropyx</a>
+    <nav class="nav-actions">
+      <a class="btn btn-text" href="#measures">What it measures</a>
+      <a class="btn btn-text" href="#evidence">Evidence</a>
+      <a class="btn btn-text" href="#start">Quick start</a>
+      <a class="btn btn-outlined" href="https://github.com/copyleftdev/entropyx" aria-label="GitHub repository">
+        <!-- Octicon: mark-github -->
+        <svg class="octicon" width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/>
+        </svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- =========================== Hero =========================== -->
+<section class="hero">
+  <div class="container">
+    <p class="section-eyebrow">
+      <span class="material-symbols-outlined" aria-hidden="true">graph_6</span>
+      v0.1 · AGPL-3.0 · local-first · deterministic
+    </p>
+    <h1>A quantifiable way<br>to tell the truth.</h1>
+    <p class="tagline">A forensic instrument for codebases.<br>Measurements. Not opinions.</p>
+    <p class="sub">
+      entropyx scans your git repository and projects its temporal, structural,
+      and authorship trajectory onto seven physical axes. It surfaces the files
+      that will break, the commits that carry blast radius, and the ownership
+      patterns nobody's been tracking.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-filled" href="https://github.com/copyleftdev/entropyx">
+        <svg class="octicon" width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/>
+        </svg>
+        Enter the repo
+      </a>
+      <a class="btn btn-tonal" href="#start">
+        <span class="material-symbols-outlined">terminal</span>
+        Quick start
+      </a>
+      <a class="btn btn-text" href="#evidence">
+        See it on real repos
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </a>
+    </div>
+    <div class="chip-row" aria-label="Key properties">
+      <span class="chip"><span class="material-symbols-outlined">verified</span> bitwise deterministic</span>
+      <span class="chip"><span class="material-symbols-outlined">cloud_off</span> no network</span>
+      <span class="chip"><span class="material-symbols-outlined">bolt</span> 2.4s on ripgrep</span>
+      <span class="chip"><span class="material-symbols-outlined">translate</span> 7 languages</span>
+      <span class="chip"><span class="material-symbols-outlined">schema</span> typed tq1 protocol</span>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== Why =========================== -->
+<section id="why">
+  <div class="container">
+    <p class="section-eyebrow">
+      <span class="material-symbols-outlined">emergency_heat</span>
+      Why this exists
+    </p>
+    <h2>Every incident starts<br>with the same scene.</h2>
+    <p class="lede">
+      A room full of senior engineers. A graph that just spiked.
+      Nobody can answer the two questions that matter.
+    </p>
+
+    <div class="dialog" role="note" aria-label="Post-incident dialogue">
+      <div class="line"><span class="q">What shipped yesterday?</span></div>
+      <div class="line"><span class="a">I don't know, let me check Slack.</span></div>
+      <div class="line"><span class="q">Who was working on that file?</span></div>
+      <div class="line"><span class="a">Ask the on-call.</span></div>
+      <div class="line"><span class="q">Was anything flagged as risky?</span></div>
+      <div class="line"><span class="a">I think Jim had a PR open, but I'm not sure.</span></div>
+    </div>
+
+    <p>
+      This is absurd. The truth is <b style="color:var(--md-on-surface)">already in the repository</b>.
+      Every commit, every diff, every authorship shift, every rename, every file
+      that grew a surface and never grew a test — recorded, timestamped,
+      bitwise-deterministic. We just hadn't built an instrument that reads it
+      back to us as <em>measurement</em> instead of folklore.
+    </p>
+    <p>entropyx is that instrument.</p>
+  </div>
+</section>
+
+<!-- =========================== What it measures =========================== -->
+<section id="measures">
+  <div class="container">
+    <p class="section-eyebrow">
+      <span class="material-symbols-outlined">query_stats</span>
+      The physics
+    </p>
+    <h2>Seven axes. Every score&nbsp;decomposes.</h2>
+    <p class="lede">
+      Consumers — human or AI — never receive a bare scalar.
+      Every composite score comes with the full seven-component breakdown and a
+      deterministic provenance chain back to the commits.
+    </p>
+
+    <table class="metric-table" aria-label="Metric axes">
+      <thead>
+        <tr><th>Sym</th><th>Axis</th><th>What it captures</th><th>Range</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>D_n</code></td><td class="axis-name">Change density</td><td>Energy absorbed per commit touching this file.</td><td>[0, 1]</td></tr>
+        <tr><td><code>H_a</code></td><td class="axis-name">Author dispersion</td><td>Shannon entropy across who's modified it. Bus factor, inverted.</td><td>[0, 1]</td></tr>
+        <tr><td><code>V_t</code></td><td class="axis-name">Temporal volatility</td><td>Burstiness of activity — calm file vs. panic file.</td><td>[0, 1)</td></tr>
+        <tr><td><code>C_s</code></td><td class="axis-name">Coupling stress</td><td>How much the rest of the system moves when this file moves.</td><td>[0, 1]</td></tr>
+        <tr><td><code>B_y</code></td><td class="axis-name">Blame youth</td><td>Fraction of code written in the repo's most-recent quarter.</td><td>[0, 1]</td></tr>
+        <tr><td><code>S_n</code></td><td class="axis-name">Semantic drift</td><td>Public-API delta — the <em>surface</em> changing, not just the body.</td><td>[0, 1]</td></tr>
+        <tr><td><code>T_c</code></td><td class="axis-name">Test co-evolution</td><td>A discount. Tested change is healthier change.</td><td>[0, 1]</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- =========================== Signal classes =========================== -->
+<section id="signals">
+  <div class="container">
+    <p class="section-eyebrow">
+      <span class="material-symbols-outlined">sensors</span>
+      Six signal classes
+    </p>
+    <h2>Patterns the repository&nbsp;already&nbsp;carries.</h2>
+    <p class="lede">
+      Not predictions. Labels for dynamics that are already true. The classifier
+      is rule-based and deterministic — no ML models, no version drift.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">e911_emergency</span></div>
+        <h3>IncidentAftershock</h3>
+        <p>Bursts of temporal volatility clustered around <code>fix:</code> / <code>hotfix:</code> commits. The firefighting zone.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">hub</span></div>
+        <h3>CoupledAmplifier</h3>
+        <p>Small files with systemic blast radius. The innocuous 80-line helper that owns the whole stack.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">design_services</span></div>
+        <h3>RefactorConvergence</h3>
+        <p>Semantic drift rising, authorship narrowing, test coverage rising. A deliberate redesign in progress.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">waves</span></div>
+        <h3>ApiDrift</h3>
+        <p>Public-API churning without test co-evolution. Silent interface rot.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">group_work</span></div>
+        <h3>OwnershipFragmentation</h3>
+        <p>Authorship spreading without a density drop. Team reorg or bus-factor erosion.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">ac_unit</span></div>
+        <h3>FrozenNeglect</h3>
+        <p>Low everything, old blame, no tests touching it. Rot hiding as stability.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== Built for Claude =========================== -->
+<section id="for-ai">
+  <div class="container">
+    <p class="section-eyebrow">
+      <span class="material-symbols-outlined">smart_toy</span>
+      Design philosophy
+    </p>
+    <h2>Built for my buddy Claude.</h2>
+    <p class="lede">
+      Most AI tooling bends the tool to fit the LLM. entropyx inverts it: one
+      rigid, typed, self-describing contract — and the AI adapts to that
+      contract once and forever.
+    </p>
+
+    <div class="grid" style="margin-top:24px">
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">terminal</span></div>
+        <h3>CLI, not SDK</h3>
+        <p>stdin, stdout, exit codes, JSON. The most boring, most universal, most LLM-friendly interface there is.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">menu_book</span></div>
+        <h3>Self-describing</h3>
+        <p><code>entropyx describe</code> returns the whole contract as JSON. Claude calls it once and knows how to use everything else.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">link</span></div>
+        <h3>Handle-addressable</h3>
+        <p>Compact <code>Summary</code> up front. Fetch evidence by <code>Handle</code> on demand. Tokens are money; entropyx respects that.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">schema</span></div>
+        <h3>Typed protocol</h3>
+        <p>tq1 envelope with a JSON Schema pinned to <code>CONTRACT_VERSION</code>. Validate, generate bindings, or just trust the shape.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">verified</span></div>
+        <h3>Deterministic forever</h3>
+        <p>No ML, no wall-clock reads, no nondeterminism. Run it twice — bitwise identical output. An AI that can't trust its instruments is just hallucinating with extra steps.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon"><span class="material-symbols-outlined">cloud_off</span></div>
+        <h3>Local-first</h3>
+        <p>No API keys, no rate limits, no org admin. Runs on the dev's laptop or in CI against a cloned repo. Zero network dependency.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== Evidence =========================== -->
+<section id="evidence">
+  <div class="container">
+    <p class="section-eyebrow">
+      <span class="material-symbols-outlined">fact_check</span>
+      How we know it works
+    </p>
+    <h2>We pointed it at real codebases.</h2>
+    <p class="lede">
+      Every claim here was verified by running entropyx against production open-source
+      repos and checking whether the signals matched known ground truth. Dogfooding
+      the tool on real repos also <b>found two bugs we then fixed</b> — the instrument
+      keeps getting more honest because we keep running it.
+    </p>
+
+    <div class="grid" style="margin-top:24px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+      <article class="evidence-card">
+        <div class="evidence-head">
+          <h3>ripgrep</h3>
+          <span class="lang">Rust</span>
+        </div>
+        <div class="stat-row">
+          <span><strong>235</strong> files</span>
+          <span><strong>92</strong> authors</span>
+          <span><strong>300</strong> commits</span>
+          <span><strong>2.4s</strong> scan</span>
+        </div>
+        <p class="evidence-finding">
+          Top three hits: <code>ignore/walk.rs</code>, <code>printer/standard.rs</code>,
+          <code>searcher/mod.rs</code>. <b>These are ripgrep's known complexity centers</b> —
+          any contributor recognizes them on sight. The tool found them without being told.
+        </p>
+      </article>
+
+      <article class="evidence-card">
+        <div class="evidence-head">
+          <h3>rich</h3>
+          <span class="lang">Python</span>
+        </div>
+        <div class="stat-row">
+          <span><strong>616</strong> files</span>
+          <span><strong>299</strong> authors</span>
+          <span><strong>3,830</strong> commits</span>
+          <span><strong>5.8 yr</strong> history</span>
+        </div>
+        <p class="evidence-finding">
+          <code>rich/console.py</code> surfaced at the top — 567 commits, 76% by the creator,
+          V_t saturated. Calibrator told to weight tests as "hot": ridge regression
+          pushed <b>98% of the weight onto S_n</b>. Genuine forensic truth — tests are where
+          APIs get defined.
+        </p>
+      </article>
+
+      <article class="evidence-card">
+        <div class="evidence-head">
+          <h3>Jekyll</h3>
+          <span class="lang">Ruby</span>
+        </div>
+        <div class="stat-row">
+          <span><strong>817</strong> files</span>
+          <span><strong>117</strong> authors</span>
+          <span><strong>500</strong> commits</span>
+          <span><strong>9.4s</strong> scan</span>
+        </div>
+        <p class="evidence-finding">
+          Top hits <code>document.rb</code>, <code>site.rb</code>, <code>commands/serve.rb</code>.
+          Verified against the Ruby parser directly: 55 <code>def</code>s in <code>document.rb</code>,
+          9 in a <code>private</code> section — <b>parser captured exactly 46 public methods, zero leakage</b>.
+        </p>
+      </article>
+
+      <article class="evidence-card">
+        <div class="evidence-head">
+          <h3>re2</h3>
+          <span class="lang">C++</span>
+        </div>
+        <div class="stat-row">
+          <span><strong>158</strong> files</span>
+          <span><strong>17</strong> authors</span>
+          <span><strong>300</strong> commits</span>
+          <span><strong>74</strong> events</span>
+        </div>
+        <p class="evidence-finding">
+          Top hits <code>dfa.cc</code>, <code>parse.cc</code>, <code>regexp.cc</code> — the DFA
+          engine, parser, and representation. Anyone who's worked on re2 will tell you those
+          are the three hardest files. C++ access-specifier filter verified: 3 private
+          methods on the outer <code>RE2</code> class, <b>none leaked</b>.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =========================== Quick start =========================== -->
+<section id="start">
+  <div class="container">
+    <p class="section-eyebrow">
+      <span class="material-symbols-outlined">play_arrow</span>
+      Quick start
+    </p>
+    <h2>Three commands. No setup.</h2>
+    <p>Clone, build, point it at a real repo. That's the whole loop.</p>
+
+<pre class="code"><span class="c"># 1. build</span>
+git clone https://github.com/copyleftdev/entropyx.git
+cd entropyx
+cargo build <span class="p">--release</span>
+
+<span class="c"># 2. scan a repo → tq1 Summary JSON</span>
+./target/release/entropyx scan /path/to/repo &gt; summary.json
+
+<span class="c"># 3. drill into a file by its blob-hash handle</span>
+./target/release/entropyx explain /path/to/repo <span class="s">"file:0bdce769874b"</span>
+
+<span class="c"># bonus — emit the typed protocol schema for your LLM</span>
+./target/release/entropyx schema &gt; tq1-schema.json</pre>
+
+    <p style="margin-top:24px">
+      Five commands total:
+      <code>describe</code>, <code>scan</code>, <code>explain</code>,
+      <code>calibrate</code>, <code>schema</code>.
+      See the <a href="https://github.com/copyleftdev/entropyx/blob/main/README.md">README</a>
+      for the full contract and the
+      <a href="https://github.com/copyleftdev/entropyx/blob/main/CLAUDE.md">CLAUDE.md</a>
+      for the engineering detail.
+    </p>
+  </div>
+</section>
+
+<!-- =========================== CTA =========================== -->
+<section id="cta" style="padding-bottom: 120px;">
+  <div class="container">
+    <p class="section-eyebrow">
+      <span class="material-symbols-outlined">rocket_launch</span>
+      The promise
+    </p>
+    <h2>Stop guessing.<br>Start measuring.</h2>
+    <p class="lede" style="margin-bottom:32px;">
+      The next time a production system falls over, nobody in the room should have
+      to guess at what changed. The answer is in the repository. The repository
+      already knows. entropyx just reads it back.
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-filled" href="https://github.com/copyleftdev/entropyx">
+        <svg class="octicon" width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/>
+        </svg>
+        Enter the repository
+      </a>
+      <a class="btn btn-outlined" href="https://github.com/copyleftdev/entropyx/stargazers">
+        <!-- Octicon: star -->
+        <svg class="octicon" width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/>
+        </svg>
+        Star on GitHub
+      </a>
+      <a class="btn btn-tonal" href="https://github.com/copyleftdev/entropyx/issues/new/choose">
+        <!-- Octicon: issue-opened -->
+        <svg class="octicon" width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/>
+          <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"/>
+        </svg>
+        Open an issue
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- =========================== Footer =========================== -->
+<footer>
+  <div class="container footer-inner">
+    <div>
+      <div style="color:var(--md-on-surface); font-weight:500; margin-bottom:6px;">
+        entropyx · v0.1.0
+      </div>
+      <div>
+        Built by <a href="https://github.com/copyleftdev">@copyleftdev</a>,
+        for their buddy <a href="https://claude.com/">Claude</a>.
+      </div>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/copyleftdev/entropyx">
+        <svg class="octicon" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/>
+        </svg> repo
+      </a>
+      <a href="https://github.com/copyleftdev/entropyx/blob/main/LICENSE">AGPL-3.0</a>
+      <a href="https://github.com/copyleftdev/entropyx/blob/main/CHANGELOG.md">changelog</a>
+      <a href="https://github.com/copyleftdev/entropyx/blob/main/SECURITY.md">security</a>
+      <a href="https://github.com/copyleftdev/entropyx/blob/main/CONTRIBUTING.md">contribute</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
