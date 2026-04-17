@@ -71,6 +71,34 @@ fn query() -> &'static Query {
               (#eq? @_module "module")
               (#eq? @_exports "exports"))
 
+            ;; CommonJS — module.exports = function namedFn() {}
+            (assignment_expression
+              left: (member_expression
+                object: (identifier) @_module
+                property: (property_identifier) @_exports)
+              right: (function_expression
+                name: (identifier) @cjs)
+              (#eq? @_module "module")
+              (#eq? @_exports "exports"))
+
+            ;; CommonJS — module.exports = function () {}  (anonymous)
+            (assignment_expression
+              left: (member_expression
+                object: (identifier) @_module
+                property: (property_identifier) @_exports)
+              right: (function_expression !name) @cjs_default
+              (#eq? @_module "module")
+              (#eq? @_exports "exports"))
+
+            ;; CommonJS — module.exports = () => {}  (anonymous arrow)
+            (assignment_expression
+              left: (member_expression
+                object: (identifier) @_module
+                property: (property_identifier) @_exports)
+              right: (arrow_function) @cjs_default
+              (#eq? @_module "module")
+              (#eq? @_exports "exports"))
+
             ;; CommonJS — exports.foo = ...
             (assignment_expression
               left: (member_expression
@@ -104,6 +132,7 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
     let const_idx = q.capture_index_for_name("const")?;
     let var_idx = q.capture_index_for_name("var")?;
     let cjs_idx = q.capture_index_for_name("cjs")?;
+    let cjs_default_idx = q.capture_index_for_name("cjs_default")?;
 
     let mut cursor = QueryCursor::new();
     let mut items = Vec::new();
@@ -114,16 +143,21 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
             let Ok(name) = capture.node.utf8_text(src_bytes) else {
                 continue;
             };
-            let kind = if capture.index == fn_idx {
-                "fn"
+            let (kind, name_str) = if capture.index == fn_idx {
+                ("fn", name.to_string())
             } else if capture.index == class_idx {
-                "class"
+                ("class", name.to_string())
             } else if capture.index == const_idx {
-                "const"
+                ("const", name.to_string())
             } else if capture.index == var_idx {
-                "var"
+                ("var", name.to_string())
             } else if capture.index == cjs_idx {
-                "cjs"
+                ("cjs", name.to_string())
+            } else if capture.index == cjs_default_idx {
+                // Anonymous module.exports — emit a stable sentinel so
+                // additions/removals register but the binding name
+                // (which doesn't exist) doesn't pollute identity.
+                ("cjs", "default".to_string())
             } else {
                 // Predicate-helper captures (`@_module`, `@_exports`)
                 // are filtered out by tree-sitter when the `#eq?`
@@ -131,7 +165,7 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
                 // matches. Skip anything not in our named-emit set.
                 continue;
             };
-            items.push(format!("{kind}:{name}"));
+            items.push(format!("{kind}:{name_str}"));
         }
     }
 
@@ -233,6 +267,27 @@ class Hidden {}
         let items = parse(src).expect("parse");
         assert!(items.contains(&"cjs:alpha".to_string()));
         assert!(items.contains(&"cjs:beta".to_string()));
+    }
+
+    #[test]
+    fn module_exports_named_function_expression_captures_name() {
+        let src = "module.exports = function namedFn(x) { return x; };\n";
+        let items = parse(src).expect("parse");
+        assert!(items.contains(&"cjs:namedFn".to_string()));
+    }
+
+    #[test]
+    fn module_exports_anonymous_function_emits_cjs_default() {
+        let src = "module.exports = function () { return 42; };\n";
+        let items = parse(src).expect("parse");
+        assert!(items.contains(&"cjs:default".to_string()));
+    }
+
+    #[test]
+    fn module_exports_arrow_function_emits_cjs_default() {
+        let src = "module.exports = () => 42;\n";
+        let items = parse(src).expect("parse");
+        assert!(items.contains(&"cjs:default".to_string()));
     }
 
     #[test]
