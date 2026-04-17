@@ -105,3 +105,55 @@ fn diff_detects_add_modify_rename_delete() {
     let d01_again = repo.diff(&c0, &c1).expect("diff 0->1 repeat");
     assert_eq!(d01, d01_again);
 }
+
+#[test]
+fn diff_from_parent_tolerates_missing_parent_object() {
+    // Simulate a shallow-clone boundary: a commit whose parent SHA is
+    // recorded in its header but whose parent object is not in the
+    // object store. `diff_from_parent` must degrade gracefully to an
+    // empty-tree diff (matching git's shallow-boundary behavior)
+    // instead of hard-failing — otherwise the scan is unusable on
+    // shallow clones, which are the common case in CI.
+    let td = tempdir().expect("tempdir");
+    let root = td.path();
+    run_git(root, &["init", "--quiet"]);
+
+    fs::write(root.join("a.txt"), "v1\n").unwrap();
+    commit_all(root, "c0");
+    fs::write(root.join("a.txt"), "v2\n").unwrap();
+    let c1 = commit_all(root, "c1");
+    fs::write(root.join("a.txt"), "v3\n").unwrap();
+    fs::write(root.join("b.txt"), "beta\n").unwrap();
+    let c2 = commit_all(root, "c2");
+
+    // Prune c0 and c1's objects out of the store by rewriting the pack
+    // to only contain objects reachable from c2 MINUS its parent — an
+    // approximation of what `git clone --depth=1` produces.
+    let objects_dir = root.join(".git").join("objects");
+    // Simplest reproduction: delete the c1 commit object file directly.
+    // Loose-object layout: .git/objects/XX/YYY... where XX is the first
+    // two chars of the SHA.
+    let (dir, file) = c1.split_at(2);
+    let victim = objects_dir.join(dir).join(file);
+    if victim.exists() {
+        fs::remove_file(&victim).expect("remove parent commit object");
+    }
+
+    let repo = Repo::open(root).expect("open");
+    let diff = repo
+        .diff_from_parent(&c2)
+        .expect("shallow boundary must not hard-fail");
+
+    // Without a reachable parent tree, c2 looks like a root commit —
+    // its diff is every file added.
+    let paths: Vec<&str> = diff.iter().map(|c| c.path.as_str()).collect();
+    assert!(paths.contains(&"a.txt"));
+    assert!(paths.contains(&"b.txt"));
+    for change in &diff {
+        assert!(
+            matches!(change.kind, ChangeKind::Added),
+            "root-like diff should mark every file Added, got {:?}",
+            change.kind,
+        );
+    }
+}

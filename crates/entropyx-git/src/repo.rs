@@ -210,12 +210,23 @@ impl Repo {
 
         match commit.parent_ids().next() {
             Some(parent_id) => {
-                from_tree_owned = self
-                    .inner
-                    .find_object(parent_id.detach())?
-                    .try_into_commit()?
-                    .tree()?;
-                from_tree_ref = &from_tree_owned;
+                // In a shallow clone, the parent SHA is recorded in the
+                // commit object but the parent OBJECT is not present.
+                // gix raises "object … could not be found". Treat a
+                // missing parent as if this commit were a root — its
+                // diff becomes the full tree added. This matches git's
+                // own behavior at a shallow boundary.
+                match self.inner.find_object(parent_id.detach()) {
+                    Ok(obj) => {
+                        from_tree_owned = obj.try_into_commit()?.tree()?;
+                        from_tree_ref = &from_tree_owned;
+                    }
+                    Err(gix::object::find::existing::Error::NotFound { .. }) => {
+                        empty = self.inner.empty_tree();
+                        from_tree_ref = &empty;
+                    }
+                    Err(e) => return Err(e.into()),
+                }
             }
             None => {
                 empty = self.inner.empty_tree();
