@@ -82,6 +82,12 @@ fn scan(args: &[String]) -> ExitCode {
     let mut weights_path: Option<String> = None;
     let mut github: Option<Option<String>> = None;
     let mut no_cache = false;
+    // Bounded-window default: scan the most recent N commits. Keeps
+    // large-repo scans (openclaw, monorepos) tractable out of the box.
+    // `--since <N>` overrides; `--full-history` disables the bound.
+    // Issue #1, Tier 1 step 3.
+    const DEFAULT_COMMIT_WINDOW: usize = 2000;
+    let mut since: Option<usize> = Some(DEFAULT_COMMIT_WINDOW);
     let mut positional: Vec<&String> = Vec::new();
     let mut i = 0;
     while i < args.len() {
@@ -112,6 +118,20 @@ fn scan(args: &[String]) -> ExitCode {
             }
             "--no-cache" => {
                 no_cache = true;
+                i += 1;
+            }
+            "--since" => match args.get(i + 1).and_then(|v| v.parse::<usize>().ok()) {
+                Some(n) => {
+                    since = Some(n);
+                    i += 2;
+                }
+                None => {
+                    eprintln!("entropyx scan: --since requires a positive integer (commit count)");
+                    return ExitCode::from(2);
+                }
+            },
+            "--full-history" => {
+                since = None;
                 i += 1;
             }
             _ => {
@@ -161,8 +181,27 @@ fn scan(args: &[String]) -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
-    let metas: Vec<_> = match walk.collect::<Result<Vec<_>, _>>() {
-        Ok(v) => v,
+    // Apply the commit-window bound before materializing the walk. `take`
+    // on the underlying iterator avoids loading pre-boundary commits at
+    // all — bound tightens both time and memory.
+    let walk_result: Result<Vec<_>, _> = match since {
+        Some(n) => walk.take(n).collect(),
+        None => walk.collect(),
+    };
+    let metas: Vec<_> = match walk_result {
+        Ok(v) => {
+            // Emit a note so callers know what window they got. Silent on
+            // the fast path where the bound didn't kick in (tiny repos).
+            if let Some(n) = since
+                && v.len() >= n
+            {
+                eprintln!(
+                    "entropyx scan: bounded to last {n} commits \
+                     (pass --full-history to scan everything)"
+                );
+            }
+            v
+        }
         Err(e) => {
             eprintln!("entropyx scan: walk failed: {e}");
             return ExitCode::FAILURE;
@@ -1293,7 +1332,11 @@ fn print_usage() {
 Usage:
   entropyx describe [--format json]           self-describing protocol root
   entropyx scan <path> [--weights <file>] [--github [owner/name]] [--no-cache]
+                       [--since <N>] [--full-history]
                                               walk a repo, emit a tq1 Summary.
+                                              Default window: last 2000 commits;
+                                              --since <N> to override, or
+                                              --full-history for everything.
                                               --github enriches events with PR
                                               context. --no-cache bypasses the
                                               disk cache for fresh parses.
