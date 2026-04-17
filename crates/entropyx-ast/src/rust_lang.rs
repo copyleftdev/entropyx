@@ -99,7 +99,7 @@ fn quote_use(tree: &syn::UseTree) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{public_api_delta, Language};
+    use super::super::{Language, public_api_delta};
     use super::parse;
 
     #[test]

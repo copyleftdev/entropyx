@@ -20,9 +20,15 @@ fn commit(cwd: &Path, subject: &str) {
     run_git(
         cwd,
         &[
-            "-c", "user.name=Test",
-            "-c", "user.email=test@example.com",
-            "commit", "--allow-empty", "-q", "-m", subject,
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.com",
+            "commit",
+            "--allow-empty",
+            "-q",
+            "-m",
+            subject,
         ],
     );
 }
@@ -119,7 +125,11 @@ fn blob_at_reads_file_contents_at_specific_commit() {
 
     fs::write(root.join("f.rs"), "v1\n").unwrap();
     use std::process::Command;
-    Command::new("git").args(["add", "-A"]).current_dir(root).status().unwrap();
+    Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(root)
+        .status()
+        .unwrap();
     commit(root, "c1");
     let c1 = Command::new("git")
         .args(["rev-parse", "HEAD"])
@@ -129,7 +139,11 @@ fn blob_at_reads_file_contents_at_specific_commit() {
     let c1_sha = String::from_utf8(c1.stdout).unwrap().trim().to_string();
 
     fs::write(root.join("f.rs"), "v1\nv2\n").unwrap();
-    Command::new("git").args(["add", "-A"]).current_dir(root).status().unwrap();
+    Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(root)
+        .status()
+        .unwrap();
     commit(root, "c2");
     let c2 = Command::new("git")
         .args(["rev-parse", "HEAD"])
@@ -139,7 +153,10 @@ fn blob_at_reads_file_contents_at_specific_commit() {
     let c2_sha = String::from_utf8(c2.stdout).unwrap().trim().to_string();
 
     let repo = Repo::open(root).expect("open");
-    assert_eq!(repo.blob_at(&c1_sha, "f.rs").unwrap(), Some("v1\n".to_string()));
+    assert_eq!(
+        repo.blob_at(&c1_sha, "f.rs").unwrap(),
+        Some("v1\n".to_string())
+    );
     assert_eq!(
         repo.blob_at(&c2_sha, "f.rs").unwrap(),
         Some("v1\nv2\n".to_string()),
@@ -187,7 +204,10 @@ fn blob_sha_at_and_blob_by_sha_round_trip() {
     // Missing path → None, not error.
     assert_eq!(repo.blob_sha_at(&head, "ghost.rs").unwrap(), None);
     // Non-existent SHA → error.
-    assert!(repo.blob_by_sha("0000000000000000000000000000000000000000").is_err());
+    assert!(
+        repo.blob_by_sha("0000000000000000000000000000000000000000")
+            .is_err()
+    );
 }
 
 #[test]

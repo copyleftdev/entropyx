@@ -11,11 +11,7 @@ use std::collections::BTreeMap;
 
 #[test]
 fn change_counts_tallies_per_path() {
-    let commits = vec![
-        vec!["a.rs", "b.rs"],
-        vec!["a.rs"],
-        vec!["b.rs", "c.rs"],
-    ];
+    let commits = vec![vec!["a.rs", "b.rs"], vec!["a.rs"], vec!["b.rs", "c.rs"]];
     let counts = change_counts(&commits);
     assert_eq!(counts.get("a.rs"), Some(&2));
     assert_eq!(counts.get("b.rs"), Some(&2));
@@ -61,13 +57,7 @@ fn unit_normalize_empty_is_empty() {
 fn change_counts_is_order_invariant() {
     // RFC-001: bitwise-stable regardless of how callers build the input
     // (BTreeMap sorting + deterministic iteration protects us).
-    let c1 = vec![
-        vec!["a.rs", "b.rs"],
-        vec!["b.rs", "c.rs"],
-    ];
-    let c2 = vec![
-        vec!["b.rs", "a.rs"],
-        vec!["c.rs", "b.rs"],
-    ];
+    let c1 = vec![vec!["a.rs", "b.rs"], vec!["b.rs", "c.rs"]];
+    let c2 = vec![vec!["b.rs", "a.rs"], vec!["c.rs", "b.rs"]];
     assert_eq!(change_counts(&c1), change_counts(&c2));
 }

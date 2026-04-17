@@ -73,8 +73,7 @@ fn explain_filters_to_single_file() {
         String::from_utf8_lossy(&out.stderr),
     );
 
-    let report: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
 
     assert_eq!(report["schema"]["name"], "entropyx-explain");
     assert_eq!(report["path"], "a.rs");
@@ -120,8 +119,7 @@ fn explain_unknown_path_yields_empty_evidence() {
         .expect("spawn entropyx");
     assert!(out.status.success(), "unknown path is a valid empty query");
 
-    let report: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let report: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     assert_eq!(report["commits_touched"], 0);
     assert!(report["commits"].as_array().unwrap().is_empty());
     assert!(report["top_authors"].as_array().unwrap().is_empty());
@@ -142,9 +140,12 @@ fn explain_resolves_handle_key() {
     fs::write(root.join("target.rs"), "v1\nv2\n").unwrap();
     commit_as(root, "Bob", "bob@ex.com", 200, "touch target");
 
-
     // Step 1: scan emits a Summary; grab the handle key.
-    let scan_out = cli_cmd(td.path()).args(["scan"]).arg(root).output().expect("scan");
+    let scan_out = cli_cmd(td.path())
+        .args(["scan"])
+        .arg(root)
+        .output()
+        .expect("scan");
     assert!(scan_out.status.success());
     let summary: serde_json::Value = serde_json::from_slice(&scan_out.stdout).unwrap();
     let handles = summary["handles"].as_object().unwrap();
@@ -164,8 +165,7 @@ fn explain_resolves_handle_key() {
         "explain via handle: stderr={}",
         String::from_utf8_lossy(&explain_by_handle.stderr),
     );
-    let by_handle: serde_json::Value =
-        serde_json::from_slice(&explain_by_handle.stdout).unwrap();
+    let by_handle: serde_json::Value = serde_json::from_slice(&explain_by_handle.stdout).unwrap();
     assert_eq!(by_handle["path"], "target.rs");
     assert_eq!(by_handle["commits_touched"], 2);
 
@@ -177,9 +177,11 @@ fn explain_resolves_handle_key() {
         .output()
         .expect("explain");
     assert!(explain_by_path.status.success());
-    let by_path: serde_json::Value =
-        serde_json::from_slice(&explain_by_path.stdout).unwrap();
-    assert_eq!(by_handle, by_path, "handle and path must yield identical evidence");
+    let by_path: serde_json::Value = serde_json::from_slice(&explain_by_path.stdout).unwrap();
+    assert_eq!(
+        by_handle, by_path,
+        "handle and path must yield identical evidence"
+    );
 }
 
 #[test]
@@ -423,7 +425,6 @@ fn explain_follows_renames() {
     // Rename a.rs -> c.rs with no content change.
     fs::rename(root.join("a.rs"), root.join("c.rs")).unwrap();
     commit_as(root, "Alice", "alice@ex.com", 200, "rename a -> c");
-
 
     // Ask about the old path — should see 2 touches (add + rename-away).
     let out_old = cli_cmd(td.path())

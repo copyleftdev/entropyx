@@ -50,11 +50,7 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
             let Ok(name) = capture.node.utf8_text(src_bytes) else {
                 continue;
             };
-            if !name
-                .chars()
-                .next()
-                .is_some_and(|c| c.is_ascii_uppercase())
-            {
+            if !name.chars().next().is_some_and(|c| c.is_ascii_uppercase()) {
                 continue;
             }
             let kind = if capture.index == fn_idx {
@@ -77,7 +73,7 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{public_api_delta, Language};
+    use super::super::{Language, public_api_delta};
     use super::parse;
 
     #[test]

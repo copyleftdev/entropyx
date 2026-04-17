@@ -126,8 +126,7 @@ fn handle_record(
                     }
                 }
             }
-            "class_specifier" | "struct_specifier" | "union_specifier"
-            | "enum_specifier" => {
+            "class_specifier" | "struct_specifier" | "union_specifier" | "enum_specifier" => {
                 if section_public {
                     walk_public(child, src, items);
                 }
@@ -173,8 +172,7 @@ fn declarator_leaf_name<'a>(node: Node<'_>, src: &'a [u8]) -> Option<&'a str> {
     let mut current = node;
     loop {
         match current.kind() {
-            "function_declarator" | "pointer_declarator"
-            | "reference_declarator" => {
+            "function_declarator" | "pointer_declarator" | "reference_declarator" => {
                 current = current.child_by_field_name("declarator")?;
             }
             "identifier" | "field_identifier" => {
@@ -194,7 +192,7 @@ fn declarator_leaf_name<'a>(node: Node<'_>, src: &'a [u8]) -> Option<&'a str> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{public_api_delta, Language};
+    use super::super::{Language, public_api_delta};
     use super::parse;
 
     #[test]

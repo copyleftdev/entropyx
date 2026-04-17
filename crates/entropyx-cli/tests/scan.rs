@@ -76,8 +76,7 @@ fn scan_emits_tq1_summary() {
         String::from_utf8_lossy(&out.stderr),
     );
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
 
     // --- Protocol envelope ---
     assert_eq!(summary["schema"]["name"], "tq1");
@@ -115,8 +114,18 @@ fn scan_emits_tq1_summary() {
     // rows are path-sorted (BTreeMap iteration); rows[0] = a.rs, rows[1] = b.rs.
     let a = &rows[0];
     let b = &rows[1];
-    let a_vals: Vec<f64> = a["values"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect();
-    let b_vals: Vec<f64> = b["values"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect();
+    let a_vals: Vec<f64> = a["values"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_f64().unwrap())
+        .collect();
+    let b_vals: Vec<f64> = b["values"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_f64().unwrap())
+        .collect();
 
     // Shared invariants across both files.
     for v in [&a_vals, &b_vals] {
@@ -139,8 +148,16 @@ fn scan_emits_tq1_summary() {
     // Composite under DEFAULT_WEIGHTS diverges by the θ_b · B_y term:
     //   a: 0.15·1 + 0.15·1 + 0.10·0 + 0.20·1 + 0.10·0.0 = 0.50
     //   b: 0.15·1 + 0.15·1 + 0.10·0 + 0.20·1 + 0.10·0.5 = 0.55
-    assert!((a_vals[7] - 0.50).abs() < 1e-12, "a composite = {}", a_vals[7]);
-    assert!((b_vals[7] - 0.55).abs() < 1e-12, "b composite = {}", b_vals[7]);
+    assert!(
+        (a_vals[7] - 0.50).abs() < 1e-12,
+        "a composite = {}",
+        a_vals[7]
+    );
+    assert!(
+        (b_vals[7] - 0.55).abs() < 1e-12,
+        "b composite = {}",
+        b_vals[7]
+    );
 
     for row in [a, b] {
         assert_eq!(row["lineage_confidence"], 1.0);
@@ -186,8 +203,7 @@ fn scan_emits_rename_event() {
         .expect("spawn entropyx");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let events = summary["events"].as_array().expect("events");
     assert_eq!(events.len(), 1, "exactly one rename event");
 
@@ -226,7 +242,13 @@ fn scan_emits_hotspot_on_recent_burst() {
     let root = td.path();
     run_git(root, &["init", "--quiet"]);
 
-    let schedule = [(0, "v1"), (100, "v2"), (900, "v3"), (950, "v4"), (1000, "v5")];
+    let schedule = [
+        (0, "v1"),
+        (100, "v2"),
+        (900, "v3"),
+        (950, "v4"),
+        (1000, "v5"),
+    ];
     for (i, (time, content)) in schedule.iter().enumerate() {
         fs::write(root.join("hot.rs"), format!("{content}\n")).unwrap();
         commit_as(
@@ -245,8 +267,7 @@ fn scan_emits_hotspot_on_recent_burst() {
         .expect("spawn entropyx");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
 
     let hotspots: Vec<&serde_json::Value> = summary["events"]
         .as_array()
@@ -255,7 +276,11 @@ fn scan_emits_hotspot_on_recent_burst() {
         .filter(|e| e["kind"] == "hotspot")
         .collect();
 
-    assert_eq!(hotspots.len(), 1, "exactly one hotspot for the bursting file");
+    assert_eq!(
+        hotspots.len(),
+        1,
+        "exactly one hotspot for the bursting file"
+    );
     let h = hotspots[0];
     assert_eq!(h["at"], 1000, "event time is the latest touch");
     assert_eq!(h["reason"], "recent_burst");
@@ -289,8 +314,7 @@ fn scan_steady_cadence_emits_no_hotspot() {
         .expect("spawn entropyx");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let hotspots: Vec<&serde_json::Value> = summary["events"]
         .as_array()
         .unwrap()
@@ -334,8 +358,7 @@ fn scan_semantic_drift_distinguishes_api_change_from_cosmetic() {
         .expect("spawn");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let files: Vec<&str> = summary["dict"]["files"]
         .as_array()
         .unwrap()
@@ -414,8 +437,7 @@ fn scan_emits_incident_aftershock() {
         .expect("spawn");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let events = summary["events"].as_array().unwrap();
 
     let aftershocks: Vec<&serde_json::Value> = events
@@ -426,10 +448,7 @@ fn scan_emits_incident_aftershock() {
 
     let ev = aftershocks[0];
     assert_eq!(ev["at"], 700, "event time is the incident commit");
-    assert_eq!(
-        ev["window_days"], 0,
-        "single incident → zero-day window",
-    );
+    assert_eq!(ev["window_days"], 0, "single incident → zero-day window",);
     let files = summary["dict"]["files"].as_array().unwrap();
     assert_eq!(files[ev["file"].as_u64().unwrap() as usize], "hot.rs");
 
@@ -459,8 +478,7 @@ fn scan_no_incident_without_fix_subject() {
         .expect("spawn");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let aftershocks: Vec<&serde_json::Value> = summary["events"]
         .as_array()
         .unwrap()
@@ -483,7 +501,11 @@ fn scan_test_coevolution_discounts_well_tested_code() {
     commit_as(root, "A", "a@ex.com", 100, "init lib");
 
     // c2: src/lib.rs + tests/lib_test.rs together (co-evolution).
-    fs::write(root.join("src/lib.rs"), "pub fn one() {}\npub fn two() {}\n").unwrap();
+    fs::write(
+        root.join("src/lib.rs"),
+        "pub fn one() {}\npub fn two() {}\n",
+    )
+    .unwrap();
     fs::write(root.join("tests/lib_test.rs"), "#[test] fn t() {}\n").unwrap();
     commit_as(root, "A", "a@ex.com", 200, "add feature + test");
 
@@ -507,8 +529,7 @@ fn scan_test_coevolution_discounts_well_tested_code() {
         .expect("spawn");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
 
     // Path-sorted dict: src/lib.rs=0, tests/lib_test.rs=1.
     let files: Vec<&str> = summary["dict"]["files"]
@@ -580,8 +601,7 @@ fn scan_computes_semantic_drift_for_go_files() {
         String::from_utf8_lossy(&out.stderr),
     );
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let files: Vec<&str> = summary["dict"]["files"]
         .as_array()
         .unwrap()
@@ -609,11 +629,7 @@ fn scan_computes_semantic_drift_for_python_and_typescript() {
     run_git(root, &["init", "--quiet"]);
 
     fs::write(root.join("app.py"), "def one():\n    pass\n").unwrap();
-    fs::write(
-        root.join("index.ts"),
-        "export function one(): void {}\n",
-    )
-    .unwrap();
+    fs::write(root.join("index.ts"), "export function one(): void {}\n").unwrap();
     commit_as(root, "A", "a@ex.com", 100, "init");
 
     fs::write(
@@ -635,8 +651,7 @@ fn scan_computes_semantic_drift_for_python_and_typescript() {
         .expect("spawn");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let files: Vec<&str> = summary["dict"]["files"]
         .as_array()
         .unwrap()
@@ -646,8 +661,14 @@ fn scan_computes_semantic_drift_for_python_and_typescript() {
     assert_eq!(files, vec!["app.py", "index.ts"]);
 
     let rows = summary["files"].as_array().unwrap();
-    assert_eq!(rows[0]["values"][5], 1.0, "python S_n fires via tree-sitter");
-    assert_eq!(rows[1]["values"][5], 1.0, "typescript S_n fires via tree-sitter");
+    assert_eq!(
+        rows[0]["values"][5], 1.0,
+        "python S_n fires via tree-sitter"
+    );
+    assert_eq!(
+        rows[1]["values"][5], 1.0,
+        "typescript S_n fires via tree-sitter"
+    );
 }
 
 #[test]
@@ -684,8 +705,7 @@ fn scan_lineage_collapses_renamed_file_history() {
         String::from_utf8_lossy(&out.stderr),
     );
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
 
     // Exactly one trajectory in the dict, canonicalized to the NEW name.
     let files: Vec<&str> = summary["dict"]["files"]
@@ -755,8 +775,7 @@ fn scan_bridge_file_surfaces_via_betweenness() {
         .expect("spawn");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let files: Vec<&str> = summary["dict"]["files"]
         .as_array()
         .unwrap()
@@ -775,7 +794,10 @@ fn scan_bridge_file_surfaces_via_betweenness() {
     assert_eq!(cs_bridge, 1.0, "bridge node tops C_s");
     assert_eq!(cs_a, 0.5, "leaf exactly at its degree-only value");
     assert_eq!(cs_c, 0.5, "leaf exactly at its degree-only value");
-    assert!(cs_bridge > cs_a && cs_bridge > cs_c, "bridge strictly exceeds leaves");
+    assert!(
+        cs_bridge > cs_a && cs_bridge > cs_c,
+        "bridge strictly exceeds leaves"
+    );
 }
 
 #[test]
@@ -786,11 +808,7 @@ fn scan_ignores_unsupported_languages() {
     run_git(root, &["init", "--quiet"]);
     fs::write(root.join("Main.kt"), "fun foo() {}\n").unwrap();
     commit_as(root, "A", "a@ex.com", 100, "init");
-    fs::write(
-        root.join("Main.kt"),
-        "fun foo() {}\nfun bar() {}\n",
-    )
-    .unwrap();
+    fs::write(root.join("Main.kt"), "fun foo() {}\nfun bar() {}\n").unwrap();
     commit_as(root, "A", "a@ex.com", 200, "add bar");
 
     let out = cli_cmd(td.path())
@@ -800,8 +818,7 @@ fn scan_ignores_unsupported_languages() {
         .expect("spawn");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let sn = summary["files"][0]["values"][5].as_f64().unwrap();
     assert_eq!(sn, 0.0, "unsupported language → S_n = 0");
 }
@@ -827,8 +844,7 @@ fn scan_emits_ownership_split_event() {
         .expect("spawn");
     assert!(out.status.success());
 
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let splits: Vec<&serde_json::Value> = summary["events"]
         .as_array()
         .unwrap()
@@ -889,8 +905,7 @@ fn scan_no_split_for_single_author_file() {
         .output()
         .expect("spawn");
     assert!(out.status.success());
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     let splits: Vec<_> = summary["events"]
         .as_array()
         .unwrap()
@@ -919,7 +934,11 @@ fn scan_incident_aftershock_event_carries_sha_field() {
         commit_as(root, "A", "a@ex.com", t, subject);
     }
 
-    let out = cli_cmd(td.path()).args(["scan"]).arg(root).output().unwrap();
+    let out = cli_cmd(td.path())
+        .args(["scan"])
+        .arg(root)
+        .output()
+        .unwrap();
     assert!(out.status.success());
     let summary: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
     let aftershock = summary["events"]
@@ -978,13 +997,19 @@ fn scan_no_cache_flag_runs_successfully() {
         .arg("--no-cache")
         .output()
         .expect("spawn entropyx");
-    assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
-    let summary: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is JSON");
+    assert!(
+        out.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let summary: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is JSON");
     assert!(summary["dict"]["files"].is_array());
     assert!(summary["files"].is_array());
     // Cache file must NOT exist after a --no-cache run.
-    assert!(!td.path().join("items.json").exists(), "no cache file written");
+    assert!(
+        !td.path().join("items.json").exists(),
+        "no cache file written"
+    );
 }
 
 #[test]

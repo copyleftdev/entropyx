@@ -122,10 +122,7 @@ pub fn public_api_delta_from_items(a: &[String], b: &[String]) -> u32 {
 /// and `new` source strings. Convenience wrapper for callers that
 /// don't cache parsed results.
 pub fn public_api_delta(old: &str, new: &str, lang: Language) -> u32 {
-    let (Some(a), Some(b)) = (
-        parse_public_items(old, lang),
-        parse_public_items(new, lang),
-    ) else {
+    let (Some(a), Some(b)) = (parse_public_items(old, lang), parse_public_items(new, lang)) else {
         return 0;
     };
     public_api_delta_from_items(&a, &b)
@@ -140,16 +137,37 @@ mod dispatch_tests {
         assert_eq!(language_from_path("src/lib.rs"), Some(Language::Rust));
         assert_eq!(language_from_path("pkg/foo.go"), Some(Language::Go));
         assert_eq!(language_from_path("app/main.py"), Some(Language::Python));
-        assert_eq!(language_from_path("src/index.ts"), Some(Language::TypeScript));
-        assert_eq!(language_from_path("src/App.tsx"), Some(Language::TypeScript));
+        assert_eq!(
+            language_from_path("src/index.ts"),
+            Some(Language::TypeScript)
+        );
+        assert_eq!(
+            language_from_path("src/App.tsx"),
+            Some(Language::TypeScript)
+        );
         assert_eq!(language_from_path("src/Main.java"), Some(Language::Java));
-        assert_eq!(language_from_path("src/index.js"), Some(Language::JavaScript));
-        assert_eq!(language_from_path("src/App.jsx"), Some(Language::JavaScript));
-        assert_eq!(language_from_path("src/entry.mjs"), Some(Language::JavaScript));
-        assert_eq!(language_from_path("src/legacy.cjs"), Some(Language::JavaScript));
+        assert_eq!(
+            language_from_path("src/index.js"),
+            Some(Language::JavaScript)
+        );
+        assert_eq!(
+            language_from_path("src/App.jsx"),
+            Some(Language::JavaScript)
+        );
+        assert_eq!(
+            language_from_path("src/entry.mjs"),
+            Some(Language::JavaScript)
+        );
+        assert_eq!(
+            language_from_path("src/legacy.cjs"),
+            Some(Language::JavaScript)
+        );
         assert_eq!(language_from_path("app.rb"), Some(Language::Ruby));
         assert_eq!(language_from_path("src/widget.cpp"), Some(Language::Cpp));
-        assert_eq!(language_from_path("include/widget.hpp"), Some(Language::Cpp));
+        assert_eq!(
+            language_from_path("include/widget.hpp"),
+            Some(Language::Cpp)
+        );
         assert_eq!(language_from_path("c_header.h"), Some(Language::Cpp));
         assert_eq!(language_from_path("README.md"), None);
         assert_eq!(language_from_path(""), None);

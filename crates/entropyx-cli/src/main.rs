@@ -1,25 +1,25 @@
 //! entropyx CLI.
 //!
 //! v0.1 commands:
-//!   - `describe` — self-identifying protocol root (RFC-000, RFC-009).
-//!   - `scan`     — walk a local repo and emit a tq1 `Summary` envelope
-//!                  whose per-file rows carry D_n, H_a, V_t, C_s, and a
-//!                  composite score against RFC-007 default weights.
-//!                  B_y (blame youth), S_n (semantic drift), T_c (test
-//!                  co-evolution) are reported as 0.0 until their
-//!                  subsystems (blame, entropyx-ast) land.
+//! - `describe` — self-identifying protocol root (RFC-000, RFC-009).
+//! - `scan` — walk a local repo and emit a tq1 `Summary` envelope whose
+//!   per-file rows carry D_n, H_a, V_t, C_s, and a composite score
+//!   against RFC-007 default weights. B_y (blame youth), S_n (semantic
+//!   drift), T_c (test co-evolution) are reported as 0.0 until their
+//!   subsystems (blame, entropyx-ast) land.
+//! - `explain` — resolve a `Handle` to per-file / commit / range evidence.
+//! - `calibrate` — fit `ScoreWeights` via RFC-012 ridge regression.
+//! - `schema` — emit the tq1 `Summary` JSON Schema.
 
-use entropyx_core::metric::{
-    author_dispersion, author_entropy_nats, blame_youth, calibrate, change_counts, classify,
-    detect_ownership_split, detect_recent_burst, is_incident_subject, is_test_path, saturate_unit,
-    temporal_volatility, unit_normalize, CalibrationConfig,
-};
 use entropyx_cli::cache::{DiskItemsCache, DiskPrCache};
-use entropyx_core::{
-    Handle, MetricComponents, ScoreWeights, SignalClass, Timestamp, VertexTable,
+use entropyx_core::metric::{
+    CalibrationConfig, author_dispersion, author_entropy_nats, blame_youth, calibrate,
+    change_counts, classify, detect_ownership_split, detect_recent_burst, is_incident_subject,
+    is_test_path, saturate_unit, temporal_volatility, unit_normalize,
 };
-use entropyx_tq::{Dict, Enrichments, Event, FileRow, Schema, Summary};
+use entropyx_core::{Handle, MetricComponents, ScoreWeights, SignalClass, Timestamp, VertexTable};
 use entropyx_graph::CoChangeGraph;
+use entropyx_tq::{Dict, Enrichments, Event, FileRow, Schema, Summary};
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::process::ExitCode;
@@ -87,18 +87,16 @@ fn scan(args: &[String]) -> ExitCode {
     while i < args.len() {
         let a = &args[i];
         match a.as_str() {
-            "--weights" => {
-                match args.get(i + 1) {
-                    Some(p) => {
-                        weights_path = Some(p.clone());
-                        i += 2;
-                    }
-                    None => {
-                        eprintln!("entropyx scan: --weights requires a path");
-                        return ExitCode::from(2);
-                    }
+            "--weights" => match args.get(i + 1) {
+                Some(p) => {
+                    weights_path = Some(p.clone());
+                    i += 2;
                 }
-            }
+                None => {
+                    eprintln!("entropyx scan: --weights requires a path");
+                    return ExitCode::from(2);
+                }
+            },
             "--github" => {
                 let next_is_slug = args
                     .get(i + 1)
@@ -262,22 +260,14 @@ fn scan(args: &[String]) -> ExitCode {
                     | entropyx_git::ChangeKind::Copied { from, .. } => from.as_str(),
                     _ => ch.path.as_str(),
                 };
-                let old_items =
-                    cached_items(&repo, parent_sha, old_side, lang, &mut items_cache);
+                let old_items = cached_items(&repo, parent_sha, old_side, lang, &mut items_cache);
                 let new_items = if matches!(&ch.kind, entropyx_git::ChangeKind::Deleted) {
                     Vec::new()
                 } else {
-                    cached_items(
-                        &repo,
-                        Some(&commit.sha),
-                        &ch.path,
-                        lang,
-                        &mut items_cache,
-                    )
+                    cached_items(&repo, Some(&commit.sha), &ch.path, lang, &mut items_cache)
                 };
                 let delta =
-                    entropyx_ast::public_api_delta_from_items(&old_items, &new_items)
-                        as u64;
+                    entropyx_ast::public_api_delta_from_items(&old_items, &new_items) as u64;
                 *sn_raw.entry(canonical).or_insert(0) += delta;
             }
         }
@@ -402,7 +392,11 @@ fn scan(args: &[String]) -> ExitCode {
             1.0
         } else {
             let (total, cotouch) = tc_stats.get(path).copied().unwrap_or((0, 0));
-            if total > 0 { cotouch as f64 / total as f64 } else { 0.0 }
+            if total > 0 {
+                cotouch as f64 / total as f64
+            } else {
+                0.0
+            }
         };
         let components = MetricComponents {
             change_density: d_n,
@@ -418,8 +412,7 @@ fn scan(args: &[String]) -> ExitCode {
         // bursty cadence (V_t > 0.3) touched by any incident-tagged commit
         // is in active firefighting territory, regardless of what its
         // other dimensions look like.
-        let in_aftershock = v_t > 0.3
-            && incident_times.get(path).is_some_and(|v| !v.is_empty());
+        let in_aftershock = v_t > 0.3 && incident_times.get(path).is_some_and(|v| !v.is_empty());
         let signal_class = if in_aftershock {
             Some(SignalClass::IncidentAftershock)
         } else {
@@ -625,9 +618,7 @@ fn scan(args: &[String]) -> ExitCode {
                         pr
                     }
                     Err(e) => {
-                        eprintln!(
-                            "entropyx scan: github lookup failed for {sha}: {e}",
-                        );
+                        eprintln!("entropyx scan: github lookup failed for {sha}: {e}",);
                         return ExitCode::FAILURE;
                     }
                 },
@@ -745,9 +736,7 @@ fn explain(args: &[String]) -> ExitCode {
     }
     if let Some(rest) = key_or_path.strip_prefix("range:") {
         let Some((base, head)) = rest.split_once("..") else {
-            eprintln!(
-                "entropyx explain: malformed range handle — expected `range:<base>..<head>`",
-            );
+            eprintln!("entropyx explain: malformed range handle — expected `range:<base>..<head>`",);
             return ExitCode::from(2);
         };
         return explain_range(&repo, base, head);
@@ -760,11 +749,8 @@ fn explain(args: &[String]) -> ExitCode {
                 return ExitCode::FAILURE;
             }
         };
-        let Some((path, _)) = entries.iter().find(|(_, sha)| sha.starts_with(prefix))
-        else {
-            eprintln!(
-                "entropyx explain: handle {key_or_path} matches no blob at HEAD",
-            );
+        let Some((path, _)) = entries.iter().find(|(_, sha)| sha.starts_with(prefix)) else {
+            eprintln!("entropyx explain: handle {key_or_path} matches no blob at HEAD",);
             return ExitCode::FAILURE;
         };
         return explain_file(&repo, path);
@@ -799,16 +785,13 @@ fn explain_file(repo: &entropyx_git::Repo, file_path: &str) -> ExitCode {
         let changes = match repo.diff_from_parent(&commit.sha) {
             Ok(c) => c,
             Err(e) => {
-                eprintln!(
-                    "entropyx explain: diff failed at {}: {e}",
-                    commit.sha
-                );
+                eprintln!("entropyx explain: diff failed at {}: {e}", commit.sha);
                 return ExitCode::FAILURE;
             }
         };
-        let touched = changes.iter().any(|c| {
-            c.path == file_path || c.previous_path() == Some(file_path)
-        });
+        let touched = changes
+            .iter()
+            .any(|c| c.path == file_path || c.previous_path() == Some(file_path));
         if !touched {
             continue;
         }
@@ -865,11 +848,7 @@ fn explain_file(repo: &entropyx_git::Repo, file_path: &str) -> ExitCode {
     write_json(&report, "explain")
 }
 
-fn explain_commit(
-    repo: &entropyx_git::Repo,
-    sha: &str,
-    github_slug: Option<&str>,
-) -> ExitCode {
+fn explain_commit(repo: &entropyx_git::Repo, sha: &str, github_slug: Option<&str>) -> ExitCode {
     let meta = match repo.commit_by_sha(sha) {
         Ok(m) => m,
         Err(e) => {
@@ -943,22 +922,17 @@ fn explain_commit(
     // unauthenticated).
     if let Some(slug) = github_slug {
         let Some((owner, repo_name)) = slug.split_once('/') else {
-            eprintln!(
-                "entropyx explain: --github expects owner/name (got {slug})",
-            );
+            eprintln!("entropyx explain: --github expects owner/name (got {slug})",);
             return ExitCode::from(2);
         };
         use entropyx_github::GithubClient;
         let client = entropyx_github::HttpClient::from_env();
         match client.pr_for_commit(owner, repo_name, &meta.sha) {
             Ok(Some(pr)) => {
-                report
-                    .as_object_mut()
-                    .unwrap()
-                    .insert(
-                        "pull_request".to_string(),
-                        serde_json::to_value(&pr).unwrap(),
-                    );
+                report.as_object_mut().unwrap().insert(
+                    "pull_request".to_string(),
+                    serde_json::to_value(&pr).unwrap(),
+                );
             }
             Ok(None) => {
                 // No PR references the commit — typically a direct push.
@@ -1015,10 +989,7 @@ fn explain_range(repo: &entropyx_git::Repo, base: &str, head: &str) -> ExitCode 
                 }
             }
             Err(e) => {
-                eprintln!(
-                    "entropyx explain: range diff failed at {}: {e}",
-                    commit.sha
-                );
+                eprintln!("entropyx explain: range diff failed at {}: {e}", commit.sha);
                 return ExitCode::FAILURE;
             }
         }

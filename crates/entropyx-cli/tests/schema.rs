@@ -65,14 +65,15 @@ fn schema_command_emits_valid_json_with_expected_shape() {
         String::from_utf8_lossy(&out.stderr),
     );
 
-    let v: serde_json::Value =
-        serde_json::from_slice(&out.stdout).expect("stdout is valid JSON");
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).expect("stdout is valid JSON");
 
-    assert_eq!(
-        v["$schema"],
-        "https://json-schema.org/draft/2020-12/schema",
+    assert_eq!(v["$schema"], "https://json-schema.org/draft/2020-12/schema",);
+    assert!(
+        v["$id"]
+            .as_str()
+            .unwrap()
+            .starts_with("https://entropyx.dev/schema/tq1-")
     );
-    assert!(v["$id"].as_str().unwrap().starts_with("https://entropyx.dev/schema/tq1-"));
     assert_eq!(v["title"], "tq1 Summary");
 
     let defs = v["$defs"].as_object().expect("$defs is object");
@@ -115,7 +116,11 @@ fn emitted_schema_matches_scan_output_structure() {
         .arg(&repo)
         .output()
         .expect("spawn scan");
-    assert!(scan.status.success(), "scan failed: {}", String::from_utf8_lossy(&scan.stderr));
+    assert!(
+        scan.status.success(),
+        "scan failed: {}",
+        String::from_utf8_lossy(&scan.stderr)
+    );
     let summary: serde_json::Value = serde_json::from_slice(&scan.stdout).expect("summary JSON");
 
     let schema_out = cli_cmd(td.path()).arg("schema").output().expect("schema");
@@ -130,7 +135,10 @@ fn emitted_schema_matches_scan_output_structure() {
         .map(|v| v.as_str().unwrap())
         .collect();
     for key in required {
-        assert!(summary.get(key).is_some(), "summary missing `{key}` (declared required in schema)");
+        assert!(
+            summary.get(key).is_some(),
+            "summary missing `{key}` (declared required in schema)"
+        );
     }
 
     // FileRow.values length from the schema matches every row.

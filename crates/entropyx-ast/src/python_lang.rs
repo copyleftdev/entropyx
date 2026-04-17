@@ -71,12 +71,7 @@ fn walk(
     }
 }
 
-fn handle_class(
-    node: Node<'_>,
-    src: &[u8],
-    items: &mut Vec<String>,
-    class_path: &mut Vec<String>,
-) {
+fn handle_class(node: Node<'_>, src: &[u8], items: &mut Vec<String>, class_path: &mut Vec<String>) {
     let Some(name_node) = node.child_by_field_name("name") else {
         return;
     };
@@ -148,7 +143,7 @@ fn qualify(class_path: &[String], name: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{public_api_delta, Language};
+    use super::super::{Language, public_api_delta};
     use super::parse;
 
     #[test]

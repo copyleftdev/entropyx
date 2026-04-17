@@ -25,7 +25,11 @@ fn author_entropy_uniform_over_two_is_ln2() {
 fn author_entropy_is_order_invariant() {
     let a = author_entropy_nats(&["a", "b", "a", "c", "b", "b"]);
     let b = author_entropy_nats(&["b", "b", "a", "a", "c", "b"]);
-    assert_eq!(a.to_bits(), b.to_bits(), "RFC-001: bitwise-stable across order");
+    assert_eq!(
+        a.to_bits(),
+        b.to_bits(),
+        "RFC-001: bitwise-stable across order"
+    );
 }
 
 #[test]
@@ -66,12 +70,19 @@ fn temporal_volatility_all_same_time_is_zero() {
 fn temporal_volatility_is_order_invariant() {
     let a = temporal_volatility(&[100, 200, 400, 800]);
     let b = temporal_volatility(&[800, 400, 200, 100]);
-    assert_eq!(a.to_bits(), b.to_bits(), "RFC-001: bitwise-stable across order");
+    assert_eq!(
+        a.to_bits(),
+        b.to_bits(),
+        "RFC-001: bitwise-stable across order"
+    );
 }
 
 #[test]
 fn temporal_volatility_exponential_gaps_is_high() {
     // Gaps: 100, 200, 400, 800 — growing geometrically → high CV.
     let v = temporal_volatility(&[0, 100, 300, 700, 1500]);
-    assert!(v > 0.5, "exponential spacing should yield CV > 0.5, got {v}");
+    assert!(
+        v > 0.5,
+        "exponential spacing should yield CV > 0.5, got {v}"
+    );
 }

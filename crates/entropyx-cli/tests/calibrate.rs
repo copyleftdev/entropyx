@@ -78,7 +78,6 @@ fn calibrate_command_produces_valid_scoreweights() {
     .unwrap();
     commit_as(root, "carol@ex.com", 400, "even more hot");
 
-
     // Step 1: scan → summary.json
     let scan_out = cli_cmd(td.path())
         .args(["scan"])
@@ -100,11 +99,7 @@ fn calibrate_command_produces_valid_scoreweights() {
         "stable.rs": 0.1,
     });
     let labels_path = td.path().join("labels.json");
-    fs::write(
-        &labels_path,
-        serde_json::to_string_pretty(&labels).unwrap(),
-    )
-    .unwrap();
+    fs::write(&labels_path, serde_json::to_string_pretty(&labels).unwrap()).unwrap();
 
     // Step 3: calibrate.
     let cal_out = cli_cmd(td.path())
@@ -120,14 +115,15 @@ fn calibrate_command_produces_valid_scoreweights() {
         "calibrate failed: {}",
         String::from_utf8_lossy(&cal_out.stderr),
     );
-    let weights: serde_json::Value =
-        serde_json::from_slice(&cal_out.stdout).expect("weights JSON");
+    let weights: serde_json::Value = serde_json::from_slice(&cal_out.stdout).expect("weights JSON");
 
     // RFC-012 invariant: positives sum to 1.0.
-    let positives: f64 = ["theta_d", "theta_h", "theta_v", "theta_c", "theta_b", "theta_s"]
-        .iter()
-        .map(|k| weights[k].as_f64().unwrap())
-        .sum();
+    let positives: f64 = [
+        "theta_d", "theta_h", "theta_v", "theta_c", "theta_b", "theta_s",
+    ]
+    .iter()
+    .map(|k| weights[k].as_f64().unwrap())
+    .sum();
     assert!(
         (positives - 1.0).abs() < 1e-9,
         "positives sum = {positives}",
@@ -160,7 +156,10 @@ fn calibrate_command_produces_valid_scoreweights() {
         serde_json::from_slice(&scan2_out.stdout).expect("weighted summary");
     for row in summary2["files"].as_array().unwrap() {
         let composite = row["values"][7].as_f64().unwrap();
-        assert!(composite.is_finite(), "weighted composite {composite} not finite");
+        assert!(
+            composite.is_finite(),
+            "weighted composite {composite} not finite"
+        );
     }
 }
 
@@ -174,9 +173,12 @@ fn scan_weights_flag_changes_composite() {
     fs::write(root.join("f.rs"), "pub fn a() {}\npub fn b() {}\n").unwrap();
     commit_as(root, "a@ex.com", 200, "add b");
 
-
     // Default scan.
-    let default_out = cli_cmd(td.path()).args(["scan"]).arg(root).output().unwrap();
+    let default_out = cli_cmd(td.path())
+        .args(["scan"])
+        .arg(root)
+        .output()
+        .unwrap();
     assert!(default_out.status.success());
     let default: serde_json::Value = serde_json::from_slice(&default_out.stdout).unwrap();
     let default_composite = default["files"][0]["values"][7].as_f64().unwrap();
@@ -208,7 +210,10 @@ fn scan_weights_flag_changes_composite() {
     let weighted_composite = weighted["files"][0]["values"][7].as_f64().unwrap();
 
     // All-on-S_n with S_n=1.0 → composite must be exactly 1.0.
-    assert_eq!(weighted_composite, 1.0, "all-S weights should yield composite=1.0");
+    assert_eq!(
+        weighted_composite, 1.0,
+        "all-S weights should yield composite=1.0"
+    );
     // And it differs from default.
     assert!(
         (weighted_composite - default_composite).abs() > 0.1,
@@ -250,7 +255,11 @@ fn calibrate_empty_overlap_falls_back_to_defaults() {
     fs::write(root.join("foo.rs"), "pub fn a(){}").unwrap();
     commit_as(root, "a@ex.com", 100, "init");
 
-    let scan_out = cli_cmd(td.path()).args(["scan"]).arg(root).output().unwrap();
+    let scan_out = cli_cmd(td.path())
+        .args(["scan"])
+        .arg(root)
+        .output()
+        .unwrap();
     let summary_path = td.path().join("summary.json");
     fs::write(&summary_path, &scan_out.stdout).unwrap();
 
@@ -270,7 +279,8 @@ fn calibrate_empty_overlap_falls_back_to_defaults() {
     assert!(cal_out.status.success(), "calibrate should still succeed");
     // Warning goes to stderr, but the output weights must still be valid.
     let w: serde_json::Value = serde_json::from_slice(&cal_out.stdout).unwrap();
-    assert!((w["theta_d"].as_f64().unwrap() - 0.15).abs() < 1e-9,
+    assert!(
+        (w["theta_d"].as_f64().unwrap() - 0.15).abs() < 1e-9,
         "empty overlap → DEFAULT_WEIGHTS (theta_d=0.15)",
     );
 }

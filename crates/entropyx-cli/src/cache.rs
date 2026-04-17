@@ -142,22 +142,11 @@ impl DiskPrCache {
     ///   - `Some(Some(pr))` — cached, PR found
     ///   - `Some(None)` — cached, no PR for this commit (don't re-query)
     ///   - `None` — not cached, caller should query the network
-    pub fn get(
-        &self,
-        owner: &str,
-        repo: &str,
-        sha: &str,
-    ) -> Option<Option<PullRequestRef>> {
+    pub fn get(&self, owner: &str, repo: &str, sha: &str) -> Option<Option<PullRequestRef>> {
         self.map.get(&Self::key(owner, repo, sha)).cloned()
     }
 
-    pub fn insert(
-        &mut self,
-        owner: &str,
-        repo: &str,
-        sha: &str,
-        pr: Option<PullRequestRef>,
-    ) {
+    pub fn insert(&mut self, owner: &str, repo: &str, sha: &str, pr: Option<PullRequestRef>) {
         self.map.insert(Self::key(owner, repo, sha), pr);
     }
 
@@ -216,7 +205,10 @@ mod tests {
             c.get("abc123", Language::Rust),
             Some(vec!["fn:foo/2".to_string(), "struct:Bar".to_string()]),
         );
-        assert_eq!(c.get("def456", Language::Go), Some(vec!["fn:Hello".to_string()]));
+        assert_eq!(
+            c.get("def456", Language::Go),
+            Some(vec!["fn:Hello".to_string()])
+        );
         // Wrong language for an existing SHA is a miss.
         assert_eq!(c.get("abc123", Language::Go), None);
         // Unknown SHA is a miss.
@@ -246,7 +238,11 @@ mod tests {
         let td = tempdir().expect("tempdir");
         let path = td.path().join("nested").join("subdir").join("items.json");
         let mut c = DiskItemsCache::load_at(path.clone());
-        c.insert("abc".to_string(), Language::Rust, vec!["fn:x/0".to_string()]);
+        c.insert(
+            "abc".to_string(),
+            Language::Rust,
+            vec!["fn:x/0".to_string()],
+        );
         c.save().expect("save creates parents");
         assert!(path.exists(), "file written");
     }

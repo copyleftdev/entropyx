@@ -68,8 +68,8 @@ impl Repo {
             )
             .into());
         }
-        let text = std::str::from_utf8(&out.stdout)
-            .map_err(|e| format!("blame output not UTF-8: {e}"))?;
+        let text =
+            std::str::from_utf8(&out.stdout).map_err(|e| format!("blame output not UTF-8: {e}"))?;
         Ok(crate::blame::parse_line_porcelain(text))
     }
 
@@ -296,9 +296,7 @@ fn iter_diff(from_tree: &gix::Tree<'_>, to_tree: &gix::Tree<'_>) -> Result<Vec<F
         // recurses into trees automatically; this just filters their
         // intermediate Addition/Deletion records.
         if !change.event.entry_mode().is_blob() {
-            return Ok::<_, std::convert::Infallible>(
-                gix::object::tree::diff::Action::Continue,
-            );
+            return Ok::<_, std::convert::Infallible>(gix::object::tree::diff::Action::Continue);
         }
         let path = String::from_utf8_lossy(change.location).into_owned();
         let kind = match change.event {
@@ -342,10 +340,14 @@ fn iter_diff(from_tree: &gix::Tree<'_>, to_tree: &gix::Tree<'_>) -> Result<Vec<F
 /// doesn't contain two path segments.
 pub fn parse_github_slug(url: &str) -> Option<String> {
     let url = url.trim().trim_end_matches(".git").trim_end_matches('/');
-    let rest = ["https://github.com/", "http://github.com/", "ssh://git@github.com/"]
-        .iter()
-        .find_map(|p| url.strip_prefix(p))
-        .or_else(|| url.strip_prefix("git@github.com:"))?;
+    let rest = [
+        "https://github.com/",
+        "http://github.com/",
+        "ssh://git@github.com/",
+    ]
+    .iter()
+    .find_map(|p| url.strip_prefix(p))
+    .or_else(|| url.strip_prefix("git@github.com:"))?;
     // Take exactly the first two path segments: owner/name. Paths with
     // trailing segments (sub-paths, branches) are rejected via this
     // two-segment slice.
@@ -372,7 +374,10 @@ fn bstr_to_string(b: &gix::bstr::BStr) -> String {
 
 fn subject_of(message: &gix::bstr::BStr) -> String {
     let bytes: &[u8] = message;
-    let end = bytes.iter().position(|&c| c == b'\n').unwrap_or(bytes.len());
+    let end = bytes
+        .iter()
+        .position(|&c| c == b'\n')
+        .unwrap_or(bytes.len());
     String::from_utf8_lossy(&bytes[..end]).into_owned()
 }
 
@@ -422,10 +427,7 @@ mod parse_tests {
 
     #[test]
     fn non_github_hosts_are_rejected() {
-        assert_eq!(
-            parse_github_slug("https://gitlab.com/acme/widgets"),
-            None,
-        );
+        assert_eq!(parse_github_slug("https://gitlab.com/acme/widgets"), None,);
         assert_eq!(
             parse_github_slug("https://bitbucket.org/acme/widgets"),
             None,

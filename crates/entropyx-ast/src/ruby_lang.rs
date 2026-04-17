@@ -60,12 +60,7 @@ fn walk_top(node: Node<'_>, src: &[u8], items: &mut Vec<String>) {
     }
 }
 
-fn handle_class_or_module(
-    node: Node<'_>,
-    src: &[u8],
-    items: &mut Vec<String>,
-    kind: &str,
-) {
+fn handle_class_or_module(node: Node<'_>, src: &[u8], items: &mut Vec<String>, kind: &str) {
     if let Some(name_node) = node.child_by_field_name("name") {
         if let Ok(name) = name_node.utf8_text(src) {
             if !name.starts_with('_') {
@@ -180,7 +175,7 @@ fn call_symbol_targets(node: Node<'_>, src: &[u8]) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{public_api_delta, Language};
+    use super::super::{Language, public_api_delta};
     use super::parse;
 
     #[test]

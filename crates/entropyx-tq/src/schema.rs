@@ -14,7 +14,7 @@
 
 use crate::Dict;
 use entropyx_core::CONTRACT_VERSION;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Build the JSON Schema for a tq1 `Summary` as a `serde_json::Value`.
 ///
@@ -22,10 +22,7 @@ use serde_json::{json, Value};
 /// `Event` union references each variant once, the per-file metric
 /// array is defined once and referenced from `FileRow`, etc.
 pub fn schema_json() -> Value {
-    let metric_columns: Vec<Value> = Dict::METRIC_COLUMNS
-        .iter()
-        .map(|s| json!(s))
-        .collect();
+    let metric_columns: Vec<Value> = Dict::METRIC_COLUMNS.iter().map(|s| json!(s)).collect();
 
     json!({
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -301,10 +298,7 @@ mod tests {
     fn schema_is_valid_json_and_has_toplevel_shape() {
         let s = schema_json();
         assert_eq!(s["$schema"], "https://json-schema.org/draft/2020-12/schema");
-        assert!(s["$id"]
-            .as_str()
-            .unwrap()
-            .contains(CONTRACT_VERSION));
+        assert!(s["$id"].as_str().unwrap().contains(CONTRACT_VERSION));
         assert_eq!(s["type"], "object");
         let required: Vec<&str> = s["required"]
             .as_array()
@@ -323,8 +317,7 @@ mod tests {
         // Dict::METRIC_COLUMNS — a drift here means the schema lies
         // about the on-the-wire column order.
         let s = schema_json();
-        let enum_vals: Vec<String> = s["$defs"]["Dict"]["properties"]["metrics"]["items"]
-            ["enum"]
+        let enum_vals: Vec<String> = s["$defs"]["Dict"]["properties"]["metrics"]["items"]["enum"]
             .as_array()
             .unwrap()
             .iter()

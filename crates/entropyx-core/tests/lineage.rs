@@ -37,7 +37,10 @@ fn author_interning_is_stable_and_case_sensitive() {
     let a2 = v.intern_author("alice@example.com");
     let a3 = v.intern_author("Alice@Example.com");
     assert_eq!(a1, a2);
-    assert_ne!(a1, a3, "VertexTable must not normalize; identity layer does");
+    assert_ne!(
+        a1, a3,
+        "VertexTable must not normalize; identity layer does"
+    );
 }
 
 #[test]

@@ -37,8 +37,7 @@ impl CoChangeGraph {
     pub fn from_commit_paths<S: AsRef<str>>(per_commit: &[Vec<S>]) -> Self {
         let mut g = Self::new();
         for commit in per_commit {
-            let idxs: Vec<usize> =
-                commit.iter().map(|p| g.intern(p.as_ref())).collect();
+            let idxs: Vec<usize> = commit.iter().map(|p| g.intern(p.as_ref())).collect();
             for i in 0..idxs.len() {
                 for j in (i + 1)..idxs.len() {
                     g.bump_edge(idxs[i], idxs[j]);
@@ -126,8 +125,7 @@ impl CoChangeGraph {
             let mut delta: Vec<f64> = vec![0.0; n];
             while let Some(w) = stack.pop() {
                 for &v in &preds[w] {
-                    delta[v] +=
-                        (sigma[v] as f64 / sigma[w] as f64) * (1.0 + delta[w]);
+                    delta[v] += (sigma[v] as f64 / sigma[w] as f64) * (1.0 + delta[w]);
                 }
                 if w != s {
                     cb[w] += delta[w];

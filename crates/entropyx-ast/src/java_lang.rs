@@ -63,10 +63,7 @@ fn query() -> &'static Query {
 /// Walk up from a captured identifier to the surrounding
 /// `method_declaration`, then inspect its `modifiers` child for the
 /// `private` token. Returns true when the method is explicitly private.
-fn method_has_private_modifier(
-    name_node: tree_sitter::Node<'_>,
-    src: &[u8],
-) -> bool {
+fn method_has_private_modifier(name_node: tree_sitter::Node<'_>, src: &[u8]) -> bool {
     let Some(method) = name_node.parent() else {
         return false;
     };
@@ -136,7 +133,7 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{public_api_delta, Language};
+    use super::super::{Language, public_api_delta};
     use super::parse;
 
     #[test]

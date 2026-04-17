@@ -30,11 +30,17 @@ impl Handle {
     }
 
     pub fn commit(commit: CommitId, sha: &str) -> Self {
-        Self::Commit { commit, sha: sha.to_owned() }
+        Self::Commit {
+            commit,
+            sha: sha.to_owned(),
+        }
     }
 
     pub fn range(base: &str, head: &str) -> Self {
-        Self::Range { base: base.to_owned(), head: head.to_owned() }
+        Self::Range {
+            base: base.to_owned(),
+            head: head.to_owned(),
+        }
     }
 
     /// Canonical string form — used as a key in `Summary.handles` and as

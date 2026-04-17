@@ -44,8 +44,7 @@ impl Describe {
             name: "entropyx",
             version: env!("CARGO_PKG_VERSION"),
             contract_version: crate::CONTRACT_VERSION,
-            purpose:
-                "forensic instrument for the temporal, structural, and \
+            purpose: "forensic instrument for the temporal, structural, and \
                  authorship dynamics of a codebase",
             capabilities: vec![
                 "scan-repo",
@@ -66,12 +65,7 @@ impl Describe {
             },
             outputs: Outputs {
                 formats: vec!["json", "jsonl", "tq1"],
-                schemas: vec![
-                    "repo_summary",
-                    "file_metric",
-                    "event",
-                    "handle",
-                ],
+                schemas: vec!["repo_summary", "file_metric", "event", "handle"],
             },
             cost_model: CostModel {
                 local_scan: "high_io_low_api",

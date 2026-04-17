@@ -1,8 +1,8 @@
 //! RFC-012 weight calibration: does the ridge fit recover known weights
 //! from synthetic data, and does it degrade sensibly at the edges?
 
-use entropyx_core::metric::{calibrate, CalibrationConfig, MetricComponents};
 use entropyx_core::ScoreWeights;
+use entropyx_core::metric::{CalibrationConfig, MetricComponents, calibrate};
 
 /// Reproducible linear-congruential pseudorandom in [0, 1) so tests
 /// don't depend on the `rand` crate or thread state.
@@ -162,7 +162,9 @@ fn regularization_shrinks_toward_uniform_positives() {
 
     // Compute variance across positives for each.
     fn var(w: ScoreWeights) -> f64 {
-        let vals = [w.theta_d, w.theta_h, w.theta_v, w.theta_c, w.theta_b, w.theta_s];
+        let vals = [
+            w.theta_d, w.theta_h, w.theta_v, w.theta_c, w.theta_b, w.theta_s,
+        ];
         let mean = vals.iter().sum::<f64>() / vals.len() as f64;
         vals.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / vals.len() as f64
     }

@@ -1,8 +1,8 @@
 //! RFC-008 classifier: each class fires on exactly the intended region
 //! of the metric space, and anything benign stays unclassified.
 
-use entropyx_core::metric::{classify, MetricComponents};
 use entropyx_core::SignalClass;
+use entropyx_core::metric::{MetricComponents, classify};
 
 fn mc(d: f64, h: f64, v: f64, c: f64) -> MetricComponents {
     mcs(d, h, v, c, 0.0)

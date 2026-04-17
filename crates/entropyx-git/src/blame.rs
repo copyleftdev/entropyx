@@ -58,9 +58,7 @@ pub(crate) fn parse_line_porcelain(text: &str) -> Vec<BlameLine> {
 /// also start with hex letters — a naive first-char check would misfire.
 fn is_header_line(line: &str) -> bool {
     let bytes = line.as_bytes();
-    bytes.len() >= 41
-        && bytes[40] == b' '
-        && bytes[..40].iter().all(|b| b.is_ascii_hexdigit())
+    bytes.len() >= 41 && bytes[40] == b' ' && bytes[..40].iter().all(|b| b.is_ascii_hexdigit())
 }
 
 #[cfg(test)]
@@ -86,7 +84,10 @@ filename foo.rs
         let got = parse_line_porcelain(txt);
         assert_eq!(got.len(), 1);
         assert_eq!(got[0].line_number, 1);
-        assert_eq!(got[0].commit_sha, "abcdef0000000000000000000000000000000000");
+        assert_eq!(
+            got[0].commit_sha,
+            "abcdef0000000000000000000000000000000000"
+        );
         assert_eq!(got[0].author_time, 1700000000);
     }
 

@@ -5,12 +5,7 @@ use entropyx_core::metric::detect_ownership_split;
 #[test]
 fn clear_split_after_established_ownership() {
     // alice owns 3 leading commits, then bob joins at t=400.
-    let pairs = [
-        (100, "alice"),
-        (200, "alice"),
-        (300, "alice"),
-        (400, "bob"),
-    ];
+    let pairs = [(100, "alice"), (200, "alice"), (300, "alice"), (400, "bob")];
     let (at, authors) = detect_ownership_split(&pairs).expect("split detected");
     assert_eq!(at, 400);
     assert_eq!(authors, vec!["alice", "bob"]);
@@ -38,12 +33,7 @@ fn fewer_than_three_touches_never_splits() {
 #[test]
 fn alternating_authors_from_start_do_not_split() {
     // alice-bob-alice-bob: first author only has 1 leading commit.
-    let pairs = [
-        (100, "alice"),
-        (200, "bob"),
-        (300, "alice"),
-        (400, "bob"),
-    ];
+    let pairs = [(100, "alice"), (200, "bob"), (300, "alice"), (400, "bob")];
     assert_eq!(detect_ownership_split(&pairs), None);
 }
 

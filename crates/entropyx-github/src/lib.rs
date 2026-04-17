@@ -39,12 +39,7 @@ pub trait GithubClient {
     /// that's a valid forensic fact, not an error. Returns `Err` on
     /// network failure, HTTP 4xx/5xx, rate-limit exhaustion, or malformed
     /// response.
-    fn pr_for_commit(
-        &self,
-        owner: &str,
-        repo: &str,
-        sha: &str,
-    ) -> Result<Option<PullRequestRef>>;
+    fn pr_for_commit(&self, owner: &str, repo: &str, sha: &str) -> Result<Option<PullRequestRef>>;
 }
 
 /// Real HTTP client against api.github.com. Caches successful lookups
@@ -93,10 +88,7 @@ impl HttpClient {
 /// Prefers `Retry-After` (seconds), falls back to `X-RateLimit-Reset`
 /// (unix epoch), defaults to 60 seconds. `now` is passed in so the
 /// function is testable without clock mocking.
-fn retry_wait_seconds_from_headers(
-    headers: &ureq::http::HeaderMap,
-    now_unix: u64,
-) -> u64 {
+fn retry_wait_seconds_from_headers(headers: &ureq::http::HeaderMap, now_unix: u64) -> u64 {
     if let Some(secs) = headers
         .get("Retry-After")
         .and_then(|v| v.to_str().ok())
@@ -169,27 +161,17 @@ fn backoff_seconds(attempt: u32) -> u64 {
 /// do not — those won't get better on retry.
 fn is_transient_network_error(e: &ureq::Error) -> bool {
     use ureq::Error::*;
-    matches!(
-        e,
-        Io(_) | Timeout(_) | HostNotFound | ConnectionFailed,
-    )
+    matches!(e, Io(_) | Timeout(_) | HostNotFound | ConnectionFailed,)
 }
 
 impl GithubClient for HttpClient {
-    fn pr_for_commit(
-        &self,
-        owner: &str,
-        repo: &str,
-        sha: &str,
-    ) -> Result<Option<PullRequestRef>> {
+    fn pr_for_commit(&self, owner: &str, repo: &str, sha: &str) -> Result<Option<PullRequestRef>> {
         let key = Self::cache_key(owner, repo, sha);
         if let Some(cached) = self.cache.lock().unwrap().get(&key).cloned() {
             return Ok(cached);
         }
 
-        let url = format!(
-            "https://api.github.com/repos/{owner}/{repo}/commits/{sha}/pulls",
-        );
+        let url = format!("https://api.github.com/repos/{owner}/{repo}/commits/{sha}/pulls",);
 
         // Retry loop: up to MAX_RETRIES attempts sharing a single
         // budget across rate-limit waits, transient 5xx backoff, and
@@ -326,21 +308,14 @@ impl MockClient {
         sha: &str,
         pr: Option<PullRequestRef>,
     ) -> Self {
-        self.map.insert(
-            (owner.to_string(), repo.to_string(), sha.to_string()),
-            pr,
-        );
+        self.map
+            .insert((owner.to_string(), repo.to_string(), sha.to_string()), pr);
         self
     }
 }
 
 impl GithubClient for MockClient {
-    fn pr_for_commit(
-        &self,
-        owner: &str,
-        repo: &str,
-        sha: &str,
-    ) -> Result<Option<PullRequestRef>> {
+    fn pr_for_commit(&self, owner: &str, repo: &str, sha: &str) -> Result<Option<PullRequestRef>> {
         Ok(self
             .map
             .get(&(owner.to_string(), repo.to_string(), sha.to_string()))
@@ -366,12 +341,7 @@ mod tests {
 
     #[test]
     fn mock_returns_registered_pr() {
-        let client = MockClient::new().with_pr(
-            "acme",
-            "widgets",
-            "abc123",
-            Some(sample_pr()),
-        );
+        let client = MockClient::new().with_pr("acme", "widgets", "abc123", Some(sample_pr()));
         let got = client
             .pr_for_commit("acme", "widgets", "abc123")
             .expect("mock call");
@@ -392,12 +362,7 @@ mod tests {
         // A commit legitimately has no associated PR (e.g. direct push).
         // Registering `None` explicitly is different from "never registered":
         // the former is a signal, the latter is "unknown" in real usage.
-        let client = MockClient::new().with_pr(
-            "acme",
-            "widgets",
-            "direct_push_sha",
-            None,
-        );
+        let client = MockClient::new().with_pr("acme", "widgets", "direct_push_sha", None);
         let got = client
             .pr_for_commit("acme", "widgets", "direct_push_sha")
             .expect("mock call");
@@ -443,10 +408,7 @@ mod tests {
     fn hdr(pairs: &[(&'static str, &str)]) -> ureq::http::HeaderMap {
         let mut m = ureq::http::HeaderMap::new();
         for (k, v) in pairs {
-            m.insert(
-                ureq::http::HeaderName::from_static(k),
-                v.parse().unwrap(),
-            );
+            m.insert(ureq::http::HeaderName::from_static(k), v.parse().unwrap());
         }
         m
     }

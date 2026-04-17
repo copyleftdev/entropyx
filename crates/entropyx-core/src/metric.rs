@@ -190,10 +190,7 @@ pub fn temporal_volatility(times: &[i64]) -> f64 {
     }
     let mut sorted: Vec<i64> = times.to_vec();
     sorted.sort_unstable();
-    let gaps: Vec<f64> = sorted
-        .windows(2)
-        .map(|w| (w[1] - w[0]) as f64)
-        .collect();
+    let gaps: Vec<f64> = sorted.windows(2).map(|w| (w[1] - w[0]) as f64).collect();
     let n = gaps.len() as f64;
     let mean = reduce_sum(&gaps) / n;
     if mean <= 0.0 {
@@ -253,11 +250,7 @@ impl Default for CalibrationConfig {
 ///
 /// Returns `DEFAULT_WEIGHTS` when the input is empty or degenerate —
 /// safe fallback rather than a panic.
-pub fn calibrate(
-    features: &[[f64; 7]],
-    labels: &[f64],
-    config: CalibrationConfig,
-) -> ScoreWeights {
+pub fn calibrate(features: &[[f64; 7]], labels: &[f64], config: CalibrationConfig) -> ScoreWeights {
     let n = features.len();
     if n == 0 || n != labels.len() {
         return MetricComponents::DEFAULT_WEIGHTS;
@@ -389,17 +382,37 @@ pub fn is_test_path(path: &str) -> bool {
     //   Java:   `*Test.java`, `*Tests.java`, `*Spec.java`
     //   C++:    `*_test.cc|cpp|cxx|hpp|h`, `*_tests.cc|cpp|...`
     let suffixes = [
-        "_test.rs", "_tests.rs", "_spec.rs",
+        "_test.rs",
+        "_tests.rs",
+        "_spec.rs",
         "_test.go",
-        ".test.js", ".test.jsx", ".test.ts", ".test.tsx",
-        ".test.mjs", ".test.cjs",
-        ".spec.js", ".spec.jsx", ".spec.ts", ".spec.tsx",
-        ".spec.mjs", ".spec.cjs",
-        "_test.py", "_tests.py",
-        "_spec.rb", "_test.rb",
-        "Test.java", "Tests.java", "Spec.java",
-        "_test.cc", "_test.cpp", "_test.cxx", "_test.hpp", "_test.h",
-        "_tests.cc", "_tests.cpp", "_tests.cxx",
+        ".test.js",
+        ".test.jsx",
+        ".test.ts",
+        ".test.tsx",
+        ".test.mjs",
+        ".test.cjs",
+        ".spec.js",
+        ".spec.jsx",
+        ".spec.ts",
+        ".spec.tsx",
+        ".spec.mjs",
+        ".spec.cjs",
+        "_test.py",
+        "_tests.py",
+        "_spec.rb",
+        "_test.rb",
+        "Test.java",
+        "Tests.java",
+        "Spec.java",
+        "_test.cc",
+        "_test.cpp",
+        "_test.cxx",
+        "_test.hpp",
+        "_test.h",
+        "_tests.cc",
+        "_tests.cpp",
+        "_tests.cxx",
     ];
     if suffixes.iter().any(|suf| fname.ends_with(suf)) {
         return true;

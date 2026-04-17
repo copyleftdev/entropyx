@@ -94,7 +94,7 @@ pub fn parse(source: &str) -> Option<Vec<String>> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{public_api_delta, Language};
+    use super::super::{Language, public_api_delta};
     use super::parse;
 
     #[test]

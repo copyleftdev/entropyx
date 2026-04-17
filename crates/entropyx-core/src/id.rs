@@ -45,10 +45,7 @@ define_id! {
 
 /// Seconds since the UNIX epoch. Always an explicit parameter — no crate in
 /// the workspace reads the system clock during scoring (RFC-001).
-#[derive(
-    Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd,
-    Serialize, Deserialize,
-)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Timestamp(pub i64);
 

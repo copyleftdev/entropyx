@@ -157,4 +157,3 @@ pub enum Event {
 }
 
 pub mod schema;
-

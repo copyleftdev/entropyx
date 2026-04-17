@@ -55,10 +55,14 @@ fn go_underscore_test_suffix() {
 #[test]
 fn js_and_ts_dot_test_and_spec_suffixes() {
     for f in [
-        "src/foo.test.js", "src/foo.test.ts",
-        "src/Bar.test.tsx", "src/x.test.jsx",
-        "src/y.spec.ts", "src/z.spec.js",
-        "src/m.test.mjs", "src/c.test.cjs",
+        "src/foo.test.js",
+        "src/foo.test.ts",
+        "src/Bar.test.tsx",
+        "src/x.test.jsx",
+        "src/y.spec.ts",
+        "src/z.spec.js",
+        "src/m.test.mjs",
+        "src/c.test.cjs",
     ] {
         assert!(is_test_path(f), "{f} should be a test path");
     }

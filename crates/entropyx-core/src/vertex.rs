@@ -28,25 +28,31 @@ pub struct VertexTable {
 }
 
 impl VertexTable {
-    pub fn new() -> Self { Self::default() }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     pub fn intern_commit(&mut self, sha: &str) -> CommitId {
         CommitId(Self::intern(&mut self.commits, &mut self.commit_ix, sha))
     }
 
     pub fn intern_file(&mut self, lineage_key: &str) -> FileId {
-        FileId(Self::intern(&mut self.files, &mut self.file_ix, lineage_key))
+        FileId(Self::intern(
+            &mut self.files,
+            &mut self.file_ix,
+            lineage_key,
+        ))
     }
 
     pub fn intern_author(&mut self, normalized: &str) -> AuthorId {
-        AuthorId(Self::intern(&mut self.authors, &mut self.author_ix, normalized))
+        AuthorId(Self::intern(
+            &mut self.authors,
+            &mut self.author_ix,
+            normalized,
+        ))
     }
 
-    fn intern(
-        store: &mut Vec<String>,
-        index: &mut BTreeMap<String, u32>,
-        key: &str,
-    ) -> u32 {
+    fn intern(store: &mut Vec<String>, index: &mut BTreeMap<String, u32>, key: &str) -> u32 {
         if let Some(&id) = index.get(key) {
             return id;
         }
@@ -75,7 +81,13 @@ impl VertexTable {
         self.authors.get(id.index()).map(String::as_str)
     }
 
-    pub fn file_count(&self) -> usize { self.files.len() }
-    pub fn author_count(&self) -> usize { self.authors.len() }
-    pub fn commit_count(&self) -> usize { self.commits.len() }
+    pub fn file_count(&self) -> usize {
+        self.files.len()
+    }
+    pub fn author_count(&self) -> usize {
+        self.authors.len()
+    }
+    pub fn commit_count(&self) -> usize {
+        self.commits.len()
+    }
 }
