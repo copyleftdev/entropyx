@@ -45,6 +45,8 @@ fn lang_key(lang: Language) -> &'static str {
         Language::TypeScript => "typescript",
         Language::Java => "java",
         Language::JavaScript => "javascript",
+        Language::Ruby => "ruby",
+        Language::Cpp => "cpp",
     }
 }
 

@@ -780,15 +780,15 @@ fn scan_bridge_file_surfaces_via_betweenness() {
 
 #[test]
 fn scan_ignores_unsupported_languages() {
-    // A Ruby file has no parser yet in v0.1 — contributes 0 to S_n.
+    // A Kotlin file has no parser yet in v0.1 — contributes 0 to S_n.
     let td = tempdir().expect("tempdir");
     let root = td.path();
     run_git(root, &["init", "--quiet"]);
-    fs::write(root.join("app.rb"), "def foo; end\n").unwrap();
+    fs::write(root.join("Main.kt"), "fun foo() {}\n").unwrap();
     commit_as(root, "A", "a@ex.com", 100, "init");
     fs::write(
-        root.join("app.rb"),
-        "def foo; end\ndef bar; end\n",
+        root.join("Main.kt"),
+        "fun foo() {}\nfun bar() {}\n",
     )
     .unwrap();
     commit_as(root, "A", "a@ex.com", 200, "add bar");

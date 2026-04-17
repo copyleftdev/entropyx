@@ -6,10 +6,12 @@
 //! means adding a module + a `Language` variant + a match arm; no
 //! caller-side changes.
 
+mod cpp_lang;
 mod go_lang;
 mod java_lang;
 mod javascript_lang;
 mod python_lang;
+mod ruby_lang;
 mod rust_lang;
 mod typescript_lang;
 
@@ -24,6 +26,8 @@ pub enum Language {
     TypeScript,
     Java,
     JavaScript,
+    Ruby,
+    Cpp,
 }
 
 /// Map a file path to a supported `Language` by extension. `.tsx` maps
@@ -47,6 +51,17 @@ pub fn language_from_path(path: &str) -> Option<Language> {
         || path.ends_with(".cjs")
     {
         Some(Language::JavaScript)
+    } else if path.ends_with(".rb") {
+        Some(Language::Ruby)
+    } else if path.ends_with(".cpp")
+        || path.ends_with(".cc")
+        || path.ends_with(".cxx")
+        || path.ends_with(".hpp")
+        || path.ends_with(".hh")
+        || path.ends_with(".hxx")
+        || path.ends_with(".h")
+    {
+        Some(Language::Cpp)
     } else {
         None
     }
@@ -68,6 +83,8 @@ pub fn parse_public_items(source: &str, lang: Language) -> Option<Vec<String>> {
         Language::TypeScript => typescript_lang::parse(source),
         Language::Java => java_lang::parse(source),
         Language::JavaScript => javascript_lang::parse(source),
+        Language::Ruby => ruby_lang::parse(source),
+        Language::Cpp => cpp_lang::parse(source),
     }
 }
 
@@ -130,6 +147,10 @@ mod dispatch_tests {
         assert_eq!(language_from_path("src/App.jsx"), Some(Language::JavaScript));
         assert_eq!(language_from_path("src/entry.mjs"), Some(Language::JavaScript));
         assert_eq!(language_from_path("src/legacy.cjs"), Some(Language::JavaScript));
+        assert_eq!(language_from_path("app.rb"), Some(Language::Ruby));
+        assert_eq!(language_from_path("src/widget.cpp"), Some(Language::Cpp));
+        assert_eq!(language_from_path("include/widget.hpp"), Some(Language::Cpp));
+        assert_eq!(language_from_path("c_header.h"), Some(Language::Cpp));
         assert_eq!(language_from_path("README.md"), None);
         assert_eq!(language_from_path(""), None);
     }
