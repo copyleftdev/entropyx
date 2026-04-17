@@ -1,0 +1,26 @@
+[package]
+name = "entropyx-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "CLI front-end for entropyx."
+
+[lib]
+name = "entropyx_cli"
+path = "src/lib.rs"
+
+[[bin]]
+name = "entropyx"
+path = "src/main.rs"
+
+[dependencies]
+entropyx-core = { path = "../entropyx-core" }
+entropyx-git = { path = "../entropyx-git" }
+entropyx-ast = { path = "../entropyx-ast" }
+entropyx-graph = { path = "../entropyx-graph" }
+entropyx-github = { path = "../entropyx-github" }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

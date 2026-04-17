@@ -1,0 +1,16 @@
+[package]
+name = "entropyx-git"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Local git collector for entropyx — DAG walk, diffs, blame, rename detection."
+
+[dependencies]
+entropyx-core = { path = "../entropyx-core" }
+gix = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+gix = { workspace = true }

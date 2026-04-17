@@ -1,0 +1,43 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/entropyx-core",
+    "crates/entropyx-cli",
+    "crates/entropyx-git",
+    "crates/entropyx-ast",
+    "crates/entropyx-graph",
+    "crates/entropyx-github",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0 OR MIT"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+blake3 = "1"
+gix = { version = "0.66", default-features = false, features = ["blob-diff", "revision"] }
+tempfile = "3"
+syn = { version = "2", features = ["full"] }
+tree-sitter = "0.25"
+tree-sitter-go = "0.25"
+tree-sitter-python = "0.25"
+tree-sitter-typescript = "0.23"
+tree-sitter-java = "0.23"
+tree-sitter-javascript = "0.25"
+ureq = { version = "3", default-features = false, features = ["json", "rustls"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+# Release-like perf for iteration, minus the LTO tax that makes 4+ test
+# binaries saturate a 64-core box during linking. Use with:
+#   cargo build --profile dev-release
+[profile.dev-release]
+inherits = "release"
+lto = false
+codegen-units = 16

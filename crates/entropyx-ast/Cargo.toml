@@ -1,0 +1,16 @@
+[package]
+name = "entropyx-ast"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Semantic-delta engines for entropyx — Rust via syn; tree-sitter for multi-language lands later."
+
+[dependencies]
+syn = { workspace = true }
+tree-sitter = { workspace = true }
+tree-sitter-go = { workspace = true }
+tree-sitter-python = { workspace = true }
+tree-sitter-typescript = { workspace = true }
+tree-sitter-java = { workspace = true }
+tree-sitter-javascript = { workspace = true }

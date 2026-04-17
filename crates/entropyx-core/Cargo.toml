@@ -1,0 +1,17 @@
+[package]
+name = "entropyx-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Deterministic core types and schemas for entropyx repo-forensics."
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+serde = { workspace = true }
+blake3 = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

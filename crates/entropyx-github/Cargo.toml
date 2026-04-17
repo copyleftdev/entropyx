@@ -1,0 +1,13 @@
+[package]
+name = "entropyx-github"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Sparse GitHub REST/GraphQL enrichers for entropyx."
+
+[dependencies]
+entropyx-core = { path = "../entropyx-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ureq = { workspace = true }
