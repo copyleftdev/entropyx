@@ -1,5 +1,7 @@
 # entropyx
 
+[![Tip my tokens](https://tokentip.to/badge/copyleftdev.svg?logo=1)](https://tokentip.to/@copyleftdev)
+
 **A forensic instrument for codebases. A quantifiable way to tell the truth.**
 
 [![crates.io](https://img.shields.io/crates/v/entropyx-cli.svg?label=entropyx&color=%234DD0E1)](https://crates.io/crates/entropyx-cli)
